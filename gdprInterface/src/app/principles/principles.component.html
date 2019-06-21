@@ -1,0 +1,62 @@
+<div style="margin-top: 100px; margin-left: 10px">
+    <form [formGroup]="formP">
+        <!-- div select country and sw   -->
+        <div class="row">
+            <div class="col-md-auto">
+                <mat-form-field >
+                    <mat-label>Country</mat-label>
+                    <mat-select formControlName="country" [(value)]="selectedCountry" name="Country"  (valueChange)="updateSWlist()" >
+                        <mat-option *ngFor="let c of country" [value]="c.id">
+                            {{c.name}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+            <div class="col-md-auto">
+                <mat-form-field >
+                    <mat-label>Software</mat-label>
+                    <mat-select formControlName="sw"  [(value)]="selectedSW" name="Software" (valueChange)="updateCountryList()">
+                        <mat-option *ngFor="let softW of sw" [value]="softW.id">
+                            {{softW.desc}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+        </div>
+        <!-- form rules   -->
+        <p-tabView>
+            <p-tabPanel [header]="item.label" *ngFor="let item of principles; let k = index" [selected]="k == 0">
+                    <div formArrayName="principle">
+                        <div *ngFor="let prin of formP.get('principle').controls; let i=index">
+                            <div *ngIf="prin.get('pID').value == (k + 1)">
+                                <div [formGroupName]="i">
+                                    <div formArrayName="rules" >
+                                        <div *ngIf="prin.get('pID').value == 8 && getRulesArrayF().length == 0">
+                                            No Rules
+                                        </div>
+                                        <div *ngFor="let r of prin.get('rules').controls; let j=index">
+                                            <div [formGroupName]="j">
+                                                <div class="row rowTop">
+                                                    <div class="col-md-auto">
+                                                        {{r.get('ruleDef').value}}
+                                                    </div>
+                                                    <div class="col-md-auto">
+                                                        <p-toggleButton onLabel="Apllied" offLabel="Not Apllied"
+                                                                        onIcon="pi pi-check" offIcon="pi pi-times" formControlName="ruleCheck" id="ruleCheck"></p-toggleButton>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </p-tabPanel>
+        </p-tabView>
+        <div style="margin-bottom: 1em">
+            <button  type="submit" [disabled]="!submitCheck()" class="btn btn-success" (click)="submitData()">Submit</button>
+            <button type="reset" class="btn btn-danger">Cancel</button>
+        </div>
+    </form>
+</div>

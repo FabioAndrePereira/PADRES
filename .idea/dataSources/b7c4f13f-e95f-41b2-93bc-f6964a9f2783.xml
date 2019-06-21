@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataSource name="SQLite - gdpr.db">
+  <database-model serializer="dbm" dbms="SQLITE" family-id="SQLITE" format-version="4.15">
+    <root id="1">
+      <ServerVersion>3.25.1</ServerVersion>
+    </root>
+    <schema id="2" parent="1" name="main">
+      <Current>1</Current>
+      <Visible>1</Visible>
+    </schema>
+    <collation id="3" parent="1" name="BINARY"/>
+    <collation id="4" parent="1" name="NOCASE"/>
+    <collation id="5" parent="1" name="RTRIM"/>
+    <table id="6" parent="2" name="country"/>
+    <table id="7" parent="2" name="principle"/>
+    <table id="8" parent="2" name="principleHeader"/>
+    <table id="9" parent="2" name="rule"/>
+    <table id="10" parent="2" name="ruleCountry"/>
+    <table id="11" parent="2" name="software"/>
+    <table id="12" parent="2" name="softwareCountry"/>
+    <table id="13" parent="2" name="sqlite_master">
+      <System>1</System>
+    </table>
+    <column id="14" parent="6" name="id">
+      <Position>1</Position>
+      <DataType>INTEGER|0s</DataType>
+    </column>
+    <column id="15" parent="6" name="name">
+      <Position>2</Position>
+      <DataType>TEXT|0s</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="16" parent="6" name="acronym">
+      <Position>3</Position>
+      <DataType>TEXT|0s</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <key id="17" parent="6" name="id">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <column id="18" parent="7" name="id">
+      <Position>1</Position>
+      <DataType>INTEGER|0s</DataType>
+    </column>
+    <column id="19" parent="7" name="definition">
+      <Position>2</Position>
+      <DataType>TEXT|0s</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="20" parent="7" name="principleHeaderID">
+      <Position>3</Position>
+      <DataType>int|0s</DataType>
+    </column>
+    <key id="21" parent="7">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <foreign-key id="22" parent="7" name="principle_principleHeader_id_fk">
+      <ColNames>principleHeaderID</ColNames>
+      <RefTableName>principleHeader</RefTableName>
+      <RefKeyName>principleHeader_pk</RefKeyName>
+      <RefColNames>id</RefColNames>
+      <OnDelete>cascade</OnDelete>
+    </foreign-key>
+    <column id="23" parent="8" name="id">
+      <Position>1</Position>
+      <DataType>INTEGER|0s</DataType>
+    </column>
+    <column id="24" parent="8" name="type">
+      <Position>2</Position>
+      <DataType>text|0s</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <key id="25" parent="8" name="principleHeader_pk">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <column id="26" parent="9" name="id">
+      <Position>1</Position>
+      <DataType>INTEGER|0s</DataType>
+    </column>
+    <column id="27" parent="9" name="definition">
+      <Position>2</Position>
+      <DataType>TEXT|0s</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <key id="28" parent="9" name="id">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <column id="29" parent="10" name="ruleID">
+      <Position>1</Position>
+      <DataType>INTEGER|0s</DataType>
+    </column>
+    <column id="30" parent="10" name="countryID">
+      <Position>2</Position>
+      <DataType>INTEGER|0s</DataType>
+    </column>
+    <index id="31" parent="10" name="sqlite_autoindex_ruleCountry_1">
+      <NameSurrogate>1</NameSurrogate>
+      <ColNames>ruleID
+countryID</ColNames>
+      <ColumnCollations></ColumnCollations>
+      <Unique>1</Unique>
+    </index>
+    <key id="32" parent="10">
+      <ColNames>ruleID
+countryID</ColNames>
+      <Primary>1</Primary>
+      <UnderlyingIndexName>sqlite_autoindex_ruleCountry_1</UnderlyingIndexName>
+    </key>
+    <foreign-key id="33" parent="10">
+      <ColNames>ruleID</ColNames>
+      <RefTableName>rule</RefTableName>
+      <RefKeyName>id</RefKeyName>
+      <RefColNames>id</RefColNames>
+      <OnDelete>cascade</OnDelete>
+    </foreign-key>
+    <foreign-key id="34" parent="10">
+      <ColNames>countryID</ColNames>
+      <RefTableName>country</RefTableName>
+      <RefKeyName>id</RefKeyName>
+      <RefColNames>id</RefColNames>
+      <OnDelete>cascade</OnDelete>
+    </foreign-key>
+    <column id="35" parent="11" name="id">
+      <Position>1</Position>
+      <DataType>INTEGER|0s</DataType>
+    </column>
+    <column id="36" parent="11" name="description">
+      <Position>2</Position>
+      <DataType>TEXT|0s</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <key id="37" parent="11">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <column id="38" parent="12" name="softwareID">
+      <Position>1</Position>
+      <DataType>INTEGER|0s</DataType>
+    </column>
+    <column id="39" parent="12" name="countryID">
+      <Position>2</Position>
+      <DataType>INTEGER|0s</DataType>
+    </column>
+    <column id="40" parent="12" name="pathfiles">
+      <Position>3</Position>
+      <DataType>TEXT|0s</DataType>
+    </column>
+    <index id="41" parent="12" name="sqlite_autoindex_softwareCountry_1">
+      <NameSurrogate>1</NameSurrogate>
+      <ColNames>softwareID
+countryID</ColNames>
+      <ColumnCollations></ColumnCollations>
+      <Unique>1</Unique>
+    </index>
+    <key id="42" parent="12">
+      <ColNames>softwareID
+countryID</ColNames>
+      <Primary>1</Primary>
+      <UnderlyingIndexName>sqlite_autoindex_softwareCountry_1</UnderlyingIndexName>
+    </key>
+    <foreign-key id="43" parent="12">
+      <ColNames>softwareID</ColNames>
+      <RefTableName>rule</RefTableName>
+      <RefKeyName>id</RefKeyName>
+      <RefColNames>id</RefColNames>
+      <OnDelete>cascade</OnDelete>
+    </foreign-key>
+    <foreign-key id="44" parent="12">
+      <ColNames>countryID</ColNames>
+      <RefTableName>country</RefTableName>
+      <RefKeyName>id</RefKeyName>
+      <RefColNames>id</RefColNames>
+      <OnDelete>cascade</OnDelete>
+    </foreign-key>
+    <column id="45" parent="13" name="type">
+      <Position>1</Position>
+      <DataType>text|0s</DataType>
+    </column>
+    <column id="46" parent="13" name="name">
+      <Position>2</Position>
+      <DataType>text|0s</DataType>
+    </column>
+    <column id="47" parent="13" name="tbl_name">
+      <Position>3</Position>
+      <DataType>text|0s</DataType>
+    </column>
+    <column id="48" parent="13" name="rootpage">
+      <Position>4</Position>
+      <DataType>int|0s</DataType>
+    </column>
+    <column id="49" parent="13" name="sql">
+      <Position>5</Position>
+      <DataType>text|0s</DataType>
+    </column>
+  </database-model>
+</dataSource>
