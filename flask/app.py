@@ -6,7 +6,7 @@ import pdfGenerator as pdfGen
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
-PATH_DB = 'gdpr.db'
+PATH_DB = '../gdpr.db'
 
 
 @app.route('/rules/<cID>', methods=['GET'])
