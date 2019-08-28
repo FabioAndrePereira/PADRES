@@ -1,0 +1,7 @@
+version: '3'
+
+services: 
+  flaskgdpr:
+    build: ./flask
+    ports: 
+      - 5000:5000

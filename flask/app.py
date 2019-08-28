@@ -6,7 +6,7 @@ import pdfGenerator as pdfGen
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
-PATH_DB = '../gdpr.db'
+PATH_DB = 'gdpr.db'
 
 
 @app.route('/rules/<cID>', methods=['GET'])
@@ -191,6 +191,9 @@ def postDataForm():
     )
     return response
 
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0')
 
 # # Instantiation of inherited class
 # pdf = PDF()
