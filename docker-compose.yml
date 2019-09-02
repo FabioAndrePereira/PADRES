@@ -5,3 +5,10 @@ services:
     build: ./flask
     ports: 
       - 5000:5000
+
+  gdprinterface:
+    build: ./gdprInterface
+    # volumes:
+    #   - ./gdprInterface/node_modules:/app/gdprinterface
+    ports: 
+      - 4200:4200

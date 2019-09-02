@@ -3,10 +3,16 @@ from flask import Flask, abort, request
 from flask_cors import CORS
 import jsonParser as jsonParser
 import pdfGenerator as pdfGen
+import conDB as conDB
+import buildPDF
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 PATH_DB = 'gdpr.db'
+
+@app.route('/', methods=['GET'])
+def entry():
+    return "HELLO"
 
 
 @app.route('/rules/<cID>', methods=['GET'])
@@ -35,16 +41,13 @@ def rules(cID):
             except Exception as e:
                 app.logger.error("Error closing con {}".format(e))
 
-
+# get principles for each principle
 @app.route('/principles/<phID>', methods=['GET'])
 def principles(phID):
     dbCon = None
     try:
         dbCon = sql3.connect(PATH_DB)
-        cursor = dbCon.cursor()
-        queryPrinciples = 'SELECT principle.id, principle.definition FROM principle ' \
-                          'WHERE principle.principleHeaderID = ?;'
-        data = cursor.execute(queryPrinciples, phID)
+        data = conDB.getPrinciples(dbCon, phID)
         response = app.response_class(
             response=jsonParser.principlesJSON(data.fetchall()),
             status=200,
@@ -96,9 +99,7 @@ def principleH():
     dbCon = None
     try:
         dbCon = sql3.connect(PATH_DB)
-        cursor = dbCon.cursor()
-        queryPh = 'SELECT * FROM principleHeader ORDER BY id'
-        data = cursor.execute(queryPh)
+        data = conDB.getPrincipleHeader(dbCon)
         response = app.response_class(
             response=jsonParser.phJSON(data.fetchall()),
             status=200,
@@ -151,7 +152,6 @@ def postDataForm():
         dbCon = sql3.connect(PATH_DB)
         cursor = dbCon.cursor()
 
-
         querySW = 'SELECT description FROM software where id = ?;'
         data = cursor.execute(querySW, str(content['sw']))
         for i in data:
@@ -178,16 +178,17 @@ def postDataForm():
             except Exception as e:
                 app.logger.error("Error closing con {}".format(e))
     try:
-        pdfObj = pdfGen.PDF(swName, nameCountry)
-        pdfObj.add_page()
-        #pdfObj.parseData(content, swPath)
-        pdfObj.output('report.pdf', 'F')
+        html = buildPDF.buildPDF(content, swName, nameCountry)        
+        # pdfObj = pdfGen.PDF(swName, nameCountry)
+        # pdfObj.add_page()
+        # pdfObj.parseData(content, swPath)
+        # pdfObj.output('report.pdf', 'F')
     except Exception as e:
         print(e)
         abort(500, {'message': e})
 
     response = app.response_class(
-        status=200
+        status=201
     )
     return response
 

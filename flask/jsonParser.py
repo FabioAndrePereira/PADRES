@@ -59,3 +59,6 @@ def swJSON(data):
         dataRet.append(swOBJ)
     return json.dumps(dataRet)
 
+def convertJSONtoDict(jsonOBJ):
+    return json.loads(jsonOBJ)
+

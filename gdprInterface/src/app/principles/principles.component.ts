@@ -5,7 +5,6 @@ import {Principle} from './principle';
 import {FormArray, FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
 import {Router} from '@angular/router';
 
-
 @Component({
     selector: 'app-rules',
     templateUrl: './principles.component.html',
@@ -21,31 +20,30 @@ export class PrinciplesComponent implements OnInit {
         {label: 'Integrity and confidentiality ', id: '6'},
         {label: 'Accountability', id: '7'},
         {label: 'Rules Specific for the selected country', id: '8'},
-        
+
     ];
     principlesR: Principle[] = [];
     sw: iSW[] = [];
     country: iCountry[] = [];
-    
+
     formP: FormGroup;
     formPrincipleArray: FormArray;
     formRuleArray: FormArray;
-    
+
     selectedCountry: number;
     selectedSW: number;
-    
-    
+
     constructor(private principleService: PrincipleService, private fb: FormBuilder, private router: Router) {
         this.createForm();
     }
-    
+
     ngOnInit() {
         this.getCountry();
         this.getSW(0);
         this.getPrinciples();
     }
-    
-    getCountry(){
+
+    getCountry() {
         this.principleService.getCountry().subscribe(
             data => {
                 data.forEach( country  => {
@@ -55,7 +53,7 @@ export class PrinciplesComponent implements OnInit {
             }
         );
     }
-    getSW(cID: number){
+    getSW(cID: number) {
         this.principleService.getSW(cID).subscribe(
             data => {
                 data.forEach( d => {
@@ -65,9 +63,9 @@ export class PrinciplesComponent implements OnInit {
             }
         );
     }
-    
-    getPrin8(){
-        const controlArrayM = <FormArray> this.formP.get('principle');
+
+    getPrin8() {
+        const controlArrayM = this.formP.get('principle') as FormArray;
         this.principleService.getRulesCountrySW(this.selectedCountry).subscribe(
             data => {
                 data.forEach((d: any, index1) => {
@@ -75,7 +73,7 @@ export class PrinciplesComponent implements OnInit {
                     obs.principleHeaderID = 8;
                     this.principlesR.push(obs);
                     this.addRule(7);
-                    const controlArray = <FormArray> controlArrayM.controls[7].get('rules');
+                    const controlArray = controlArrayM.controls[7].get('rules') as FormArray;
                     controlArray.controls[index1].get('ruleID').setValue(obs.id);
                     controlArray.controls[index1].get('ruleDef').setValue(obs.definition);
                     controlArray.controls[index1].get('ruleCheck').setValue(false);
@@ -83,13 +81,13 @@ export class PrinciplesComponent implements OnInit {
             }
         );
     }
-    
-    getPrinciples(){
+
+    getPrinciples() {
         this.principles.forEach((principle, index) => {
             this.addPrinciple();
-            const controlArrayM = <FormArray> this.formP.get('principle');
+            const controlArrayM = this.formP.get('principle') as FormArray;
             controlArrayM.controls[index].get('pID').setValue(principle.id);
-            if(principle.id != '8'){
+            if (principle.id != '8') { // 8th principle is a diff table
                 this.principleService.getPrinciples(parseInt(principle.id)).subscribe(
                     (data: Principle[]) => {
                         data.forEach((d: any, index1) => {
@@ -97,7 +95,7 @@ export class PrinciplesComponent implements OnInit {
                             obs.principleHeaderID = parseInt(principle.id);
                             this.principlesR.push(obs);
                             this.addRule(index);
-                            const controlArray = <FormArray> controlArrayM.controls[index].get('rules');
+                            const controlArray = controlArrayM.controls[index].get('rules') as FormArray;
                             controlArray.controls[index1].get('ruleID').setValue(obs.id);
                             controlArray.controls[index1].get('ruleDef').setValue(obs.definition);
                             controlArray.controls[index1].get('ruleCheck').setValue(false);
@@ -108,31 +106,31 @@ export class PrinciplesComponent implements OnInit {
                     }
                 );
             }
-            
+
         });
     }
-    
+
     createForm() {
-        
+
         this.formP = this.fb.group({
             country: [Validators.required],
             sw: [Validators.required],
             principle: this.fb.array([])
         });
     }
-    
+
     createPrinciple() {
         return this.fb.group({
             pID: ['', Validators.required],
             rules: this.fb.array([])
         });
     }
-    
+
     addPrinciple() {
         this.formPrincipleArray = this.formP.get('principle') as FormArray;
         this.formPrincipleArray.push(this.createPrinciple());
     }
-    
+
     createRule() {
         return this.fb.group({
             ruleID: ['', Validators.required],
@@ -140,70 +138,67 @@ export class PrinciplesComponent implements OnInit {
             ruleCheck: [false, Validators.required]
         });
     }
-    
+
     addRule(i: number) {
         this.formRuleArray = (this.formP.get('principle') as FormArray).at(i).get('rules') as FormArray;
         this.formRuleArray.push(this.createRule());
     }
-    
+
     submitData() {
         const formD = this.formP.value;
         this.principleService.postDataForm(formD, this.selectedSW, this.selectedCountry).subscribe(
             data => {
-            
+
             },
             error1 => {
                 console.log(error1);
-                
-                
+
             },
-            ()=> {
+            () => {
                 this.formP.reset();
                 this.router.navigate(['/home']);
             }
         );
     }
-    
-    managePrin(){
-        //remove rules where princ 8
+
+    managePrin() {
+        // remove rules where princ 8
         this.principlesR = this.principlesR.filter( prin => prin.principleHeaderID != 8);
         const l = this.getRulesArrayF().length;
         for (let i = 0; i < l ; i++) {
             this.getRulesArrayF().removeAt(0);
         }
-        
+
     }
-    
-    getRulesArrayF(){
-        return (<FormGroup>this.formP.get('principle')).controls[7].get('rules') as FormArray;
+
+    getRulesArrayF() {
+        return (this.formP.get('principle') as FormGroup).controls[7].get('rules') as FormArray;
     }
-    
-    updateCountryList(){
-        //this.country = [];
+
+    updateCountryList() {
+        // this.country = [];
     }
-    
+
     updateSWlist() { // update sw list and also get rules for this country
         this.sw = [];
         this.getSW(this.selectedCountry);
         this.managePrin();
         this.getPrin8();
     }
-    
-    submitCheck(){
+
+    submitCheck() {
         return this.selectedCountry > 0 && this.selectedSW > 0;
     }
-    
+
 }
 
 export interface iSW {
     id: number;
     desc: string;
-    
+
 }
 export interface iCountry {
     id: number;
     name: string;
     abvr: string;
 }
-    
-
