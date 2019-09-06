@@ -178,11 +178,7 @@ def postDataForm():
             except Exception as e:
                 app.logger.error("Error closing con {}".format(e))
     try:
-        html = buildPDF.buildPDF(content, swName, nameCountry)        
-        # pdfObj = pdfGen.PDF(swName, nameCountry)
-        # pdfObj.add_page()
-        # pdfObj.parseData(content, swPath)
-        # pdfObj.output('report.pdf', 'F')
+        html = buildPDF.buildPDF(content, swName, nameCountry, content['country'], content['sw'])        
     except Exception as e:
         print(e)
         abort(500, {'message': e})
@@ -191,6 +187,28 @@ def postDataForm():
         status=201
     )
     return response
+
+@app.route('/getPDFs', methods=['GET'])
+def getPDFs():
+    con = None
+    try:
+        con = conDB.newCon()
+        data = conDB.getPDFs(con)
+        response = app.response_class(
+            response=jsonParser.pdfsJSON(data.fetchall()),
+            status=200,
+            mimetype='application/json'
+        )
+        return response
+    except Exception as e:
+        print(e)
+        abort(500, {'message': e})
+    finally:
+        try: 
+            con.close()
+            app.logger.info("dbcon closed {}".format(con))
+        except Exception as e:
+            app.logger.error("Error closing con {}".format(e))
 
 
 if __name__ == '__main__':
@@ -205,3 +223,7 @@ if __name__ == '__main__':
 #     pdf.cell(0, 10, 'Printing line number ' + str(i), 0, 1)
 # pdf.output('report.pdf', 'F')
 
+# pdfObj = pdfGen.PDF(swName, nameCountry)
+        # pdfObj.add_page()
+        # pdfObj.parseData(content, swPath)
+        # pdfObj.output('report.pdf', 'F')

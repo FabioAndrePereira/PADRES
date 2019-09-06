@@ -1,9 +1,11 @@
 import pdfkit
 import conDB as conDB
-import pdfkit
 import os
+import shutil
+from datetime import datetime
+from PyPDF2 import PdfFileReader
 
-def buildPDF(data, swName, nameCountry):
+def buildPDF(data, swName, nameCountry, countryID, swID):
     html ="""
         <!DOCTYPE html>
         <html>
@@ -14,6 +16,7 @@ def buildPDF(data, swName, nameCountry):
     for pID in range(0, 8): # 8 = numero de principios definidos
         principleHid = principlesOUT[pID]["pID"]
         principleHname = ''
+        con = None
         try: 
             con = conDB.newCon()
             res = conDB.getPrincipleHname(con, principleHid)
@@ -21,6 +24,14 @@ def buildPDF(data, swName, nameCountry):
                 principleHname = i[1]
         except Exception as e:
             raise
+        finally:
+            if con is not None:
+                try:
+                    con.close()
+                    print("con closed {}".format(con))
+                except Exception as e:
+                    print("Error closing con {}".format(e))
+
         html += "<h2>" + principleHname + "</h2>"
         
         rules = principlesOUT[pID]["rules"]
@@ -50,5 +61,25 @@ def buildPDF(data, swName, nameCountry):
     """    
     with open("file.html", "w") as file:
             file.write(html)
+    curr = datetime.now()
+    timestamp = curr.strftime("%d/%m/%Y %H:%M:%S")
+    timestamp = timestamp.replace("/","-").replace(":", "-")
+    pdfname = timestamp + '.pdf'
     pdfkit.from_file('file.html', 'out.pdf')
+    os.rename('out.pdf', pdfname)
+    # insert db
+    con = None
+    try: 
+        con = conDB.newCon()
+        conDB.insertPDF(con, countryID, swID, timestamp, os.getcwd() + '/pdfs')
+    except Exception as e:
+        raise
+    finally:
+        if con is not None:
+            try:
+                con.close()
+                print("con closed {}".format(con))
+            except Exception as e:
+                print("Error closing con {}".format(e))
+    shutil.move(pdfname, 'pdfs/')
     os.remove("file.html")

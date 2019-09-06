@@ -28,6 +28,5 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
     ],
     entryComponents: [
     ]
-    
 })
 export class PrincipleModule { }

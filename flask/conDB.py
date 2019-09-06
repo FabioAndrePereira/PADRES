@@ -27,3 +27,19 @@ def getPrincipleHname(dbCon, phID):
     data = cursor.execute(queryPrinciples, phID)
 
     return data
+
+def insertPDF(dbCon, countryID, swID, timestamp, path):
+    queryInsert = 'INSERT INTO genPDFs(countryID, softID, timestamp, path) VALUES(?, ? ,?, ?)'
+    cur = dbCon.cursor()
+    cur.execute(queryInsert, (countryID, swID, timestamp, path))
+    dbCon.commit()
+
+def getPDFs(dbCon):
+   #pdfsPATH = "pdfs/"
+    cur = dbCon.cursor()
+    pdfsQuery = 'SELECT * from genPDFs ' \
+                'join country c on genPDFs.countryID = c.id' \
+                'join software s on genPDFs.softID = s.id;'
+    data = cur.execute(pdfsQuery)
+
+    return data
