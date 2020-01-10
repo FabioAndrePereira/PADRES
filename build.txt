@@ -1,0 +1,15 @@
+-> Instalar docker
+-> individual
+    -> docker build -t flaskgdpr .
+    -> vai buscar a imagem base do from
+    -> corre o file Dockerfile criando a imagem flaskgdpr usando os
+        ficheiros locais devido ao .
+    -> docker run -p 5000:5000 flaskgdpr
+        -> corre a imagem flaskgdpr
+        -> -p x:y 
+            -> x --> porta externa
+            -> y --> porta do container
+        -> faz o bind da porta 5000 do container para a porta 5000 do 0.0.0.0
+-> tudo junto usando docker compose
+    -> definicao dos services que compoem o projeto tudo num dicheiro
+    -> docker-compose up --build para correr os ficheiros

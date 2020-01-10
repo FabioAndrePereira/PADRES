@@ -2,7 +2,7 @@ version: '3'
 
 services: 
   flaskgdpr:
-    build: ./flask
+    build: ./flask # dir do projeto
     ports: 
       - 5000:5000
 
@@ -12,3 +12,5 @@ services:
     #   - ./gdprInterface/node_modules:/app/gdprinterface
     ports: 
       - 4200:4200
+    depends_on: 
+      - flaskgdpr

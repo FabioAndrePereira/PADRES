@@ -150,8 +150,7 @@ def postDataForm():
     dbCon = None
     try:
         dbCon = sql3.connect(PATH_DB)
-        cursor = dbCon.cursor()
-
+        cursor = dbCon.cursor()   
         querySW = 'SELECT description FROM software where id = ?;'
         data = cursor.execute(querySW, str(content['sw']))
         for i in data:

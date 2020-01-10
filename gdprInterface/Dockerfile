@@ -1,11 +1,11 @@
-FROM node:11.15.0
+FROM node:13.6.0
 
 # add `/app/node_modules/.bin` to $PATH
-ENV PATH /app/gdprinterface/node_modules/.bin:$PATH
+ENV PATH /app/gdprinterface/node_modules/:$PATH
 
 #COPY package.json /app/gdprinterface/package.json
 #RUN npm install
-RUN npm install -g @angular/cli@7.3.8
+RUN npm install -g @angular/cli
 
 COPY . /app/gdprinterface
 

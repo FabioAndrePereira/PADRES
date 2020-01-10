@@ -60,6 +60,7 @@ def swJSON(data):
     return json.dumps(dataRet)
 
 def pdfsJSON(data):
+    print("aqhui1")
     dataRet = []
     for i in data:
         obj = {}

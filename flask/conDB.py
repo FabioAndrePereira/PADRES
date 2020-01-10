@@ -38,7 +38,7 @@ def getPDFs(dbCon):
    #pdfsPATH = "pdfs/"
     cur = dbCon.cursor()
     pdfsQuery = 'SELECT * from genPDFs ' \
-                'join country c on genPDFs.countryID = c.id' \
+                'join country c on genPDFs.countryID = c.id ' \
                 'join software s on genPDFs.softID = s.id;'
     data = cur.execute(pdfsQuery)
 
