@@ -176,6 +176,7 @@ def postDataForm():
                 app.logger.info("dbcon closed {}".format(dbCon))
             except Exception as e:
                 app.logger.error("Error closing con {}".format(e))
+    # generate pdf
     try:
         html = buildPDF.buildPDF(content, swName, nameCountry, content['country'], content['sw'])        
     except Exception as e:
