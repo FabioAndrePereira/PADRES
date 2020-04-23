@@ -35,51 +35,68 @@ def buildPDF(data, swName, nameCountry, countryID, swID):
         html += "<h2>" + principleHname + "</h2>"
         
         rules = principlesOUT[pID]["rules"]
-        html += "<ul>"
+        #organize rules into comply or not
+        inCompliance = []
+        not_inCompliance = []
+        for i in range(0, len(rules)):
+            if rules[i]["ruleCheck"]:
+                inCompliance.append(rules[i])
+            else:
+                not_inCompliance.append(rules[i])
+        #display rules
         if (len(rules)) > 0:
-            for i in range(0, len(rules)):
-                if rules[i]["ruleCheck"]:
-                    html += """<li><font color=\"green\" """ + rules[i]["ruleDef"] + """ --->  In compliance""" 
-                else:
-                    html += """<li><font color=\"red\" """ + rules[i]["ruleDef"] + """ --->  Not in compliance"""
-                    html += "<h6><font color=\"black\"> Suggestions to be in compliance </font></h6>"
-                    html += """
-                    <ul>
-                        <li><font color=\"black\">TODO</font></li>
-                    </ul>
-                    """
-                html += """</font></li>"""
-                
-                
+            html += "<h3><font color=\"green\"> In compliance with: </h2>"
+            html += "<ul>"
+            for i in range(0, len(inCompliance)):
+                html += """<li><font color=\"black\"> """ + inCompliance[i]["ruleDef"] + "</li>"
+            html += "</ul>"    
+
+            html += "<h3><font color=\"red\"> Not in compliance with: </h2>"
+            html += "<ul>"
+            for i in range(0, len(not_inCompliance)):
+                html += """<li><font color=\"black\"> """ + not_inCompliance[i]["ruleDef"] + "</li>"
+                html += "<h5><font color=\"black\"> Suggestions to be in compliance </font></h5>"
+                html += """
+                        <ul>
+                            <li><font color=\"black\">TODO</font></li>
+                        </ul>
+                        """
+            html += "</ul>"       
         else:
-            html +=  "<li>No principles defined</li>" 
-        html += "</ul>"
+            html +=  "No principles defined" 
 
     html += """
             </body>
         </html>
     """    
-    with open("file.html", "w") as file:
-            file.write(html)
+    
     curr = datetime.now()
     timestamp = curr.strftime("%d/%m/%Y %H:%M:%S")
     timestamp = timestamp.replace("/","-").replace(":", "-")
-    pdfname = timestamp + '.pdf'
-    pdfkit.from_file('file.html', 'out.pdf')
-    os.rename('out.pdf', pdfname)
-    # insert db
-    con = None
-    try: 
-        con = conDB.newCon()
-        conDB.insertPDF(con, countryID, swID, timestamp, os.getcwd() + '/pdfs')
-    except Exception as e:
-        raise
-    finally:
-        if con is not None:
-            try:
-                con.close()
-                print("con closed {}".format(con))
-            except Exception as e:
-                print("Error closing con {}".format(e))
-    shutil.move(pdfname, 'pdfs/')
-    os.remove("file.html")
+    
+    return html, timestamp
+    # with open("file.html", "w") as file:
+    #         file.write(html)
+    # curr = datetime.now()
+    # timestamp = curr.strftime("%d/%m/%Y %H:%M:%S")
+    # timestamp = timestamp.replace("/","-").replace(":", "-")
+    # pdfname = timestamp + '.pdf'
+    # #pdfkit.from_file('file.html', 'out.pdf')
+    # ['file1.html', 'file2.html']
+    # os.rename('out.pdf', pdfname)
+    # # insert db
+    # con = None
+    # try: 
+    #     con = conDB.newCon()
+    #     conDB.insertPDF(con, countryID, swID, timestamp, pdfname)
+    # except Exception as e:
+    #     raise
+    # finally:
+    #     if con is not None:
+    #         try:
+    #             con.close()
+    #             print("con closed {}".format(con))
+    #         except Exception as e:
+    #             print("Error closing con {}".format(e))
+    # shutil.move(pdfname, 'pdfs/')
+    #os.remove("file.html")

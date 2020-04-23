@@ -5,6 +5,8 @@ import jsonParser as jsonParser
 import pdfGenerator as pdfGen
 import conDB as conDB
 import buildPDF
+import zap as zapM
+import pdfkit
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
@@ -176,9 +178,15 @@ def postDataForm():
                 app.logger.info("dbcon closed {}".format(dbCon))
             except Exception as e:
                 app.logger.error("Error closing con {}".format(e))
-    # generate pdf
+    # generate pdf for gdpr and security report
     try:
-        html = buildPDF.buildPDF(content, swName, nameCountry, content['country'], content['sw'])        
+        htmlGDPR, timestamp = buildPDF.buildPDF(content, swName, nameCountry, content['country'], content['sw'])     
+        # CALL ZAP and others with timestamp
+        #
+        # generate final pdf 
+        with open("fileGDPR-"+ timestamp + ".html", "w") as file:
+            file.write(htmlGDPR)
+        pdfkit.from_file(["fileGDPR-"+ timestamp + ".html", 'repPassive'+timestamp+'.html', 'repActive'+timestamp+'.html'], 'report-' +timestamp+ '.pdf')   
     except Exception as e:
         print(e)
         abort(500, {'message': e})

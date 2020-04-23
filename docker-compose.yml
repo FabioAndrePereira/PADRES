@@ -5,17 +5,18 @@ services:
     image: owasp/zap2docker-stable
     ports:
       - 8090:8090
-    command:  zap.sh -daemon -port 8090 -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true -host 0.0.0.0
-  flaskgdpr:
-    build: ./flask # dir do projeto
-    ports: 
-      - 5000:5000
-
-  gdprinterface:
-    build: ./gdprInterface
-    volumes:
-      - ./gdprInterface/src:/app/gdprinterface/src
-    ports: 
-      - 4200:4200
-    depends_on: 
-      - flaskgdpr
+    command:  zap.sh -daemon -port 8090 -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true -config api.disablekey=true -host 0.0.0.0
+  # flaskgdpr:
+  #   build: ./flask # dir do projeto
+  #   volumes:
+  #     - ./flask:/app/flask
+  #   ports: 
+  #     - 5000:5000
+  # gdprinterface:
+  #   build: ./gdprInterface
+  #   volumes:
+  #     - ./gdprInterface/src:/app/gdprinterface/src
+  #   ports: 
+  #     - 4200:4200
+  #   depends_on: 
+  #     - flaskgdpr

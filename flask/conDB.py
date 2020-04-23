@@ -2,6 +2,14 @@ import sqlite3 as sql3
 
 PATH_DB = 'gdpr.db'
 
+def convertToBinaryData(filename):
+    #Convert digital data to binary format
+    with open(filename, 'rb') as file:
+        blobData = file.read()
+    return blobData
+
+    
+
 def newCon():
     return sql3.connect(PATH_DB)
 
@@ -28,12 +36,13 @@ def getPrincipleHname(dbCon, phID):
 
     return data
 
-def insertPDF(dbCon, countryID, swID, timestamp, path):
-    queryInsert = 'INSERT INTO genPDFs(countryID, softID, timestamp, path) VALUES(?, ? ,?, ?)'
+def insertPDF(dbCon, countryID, swID, timestamp, pdfs):
+    blobPDF = convertToBinaryData(pdfs)
+    queryInsert = 'INSERT INTO genPDFs(countryID, softID, timestamp, pdfs) VALUES(?, ? ,?, ?)'
     cur = dbCon.cursor()
-    cur.execute(queryInsert, (countryID, swID, timestamp, path))
+    cur.execute(queryInsert, (countryID, swID, timestamp, blobPDF))
     dbCon.commit()
-
+    
 def getPDFs(dbCon):
    #pdfsPATH = "pdfs/"
     cur = dbCon.cursor()

@@ -1,4 +1,4 @@
-#!/home/fabio/Documents/TESE/flask/flaskGDPR/bin/python2
+#!/home/fabio/Documents/TESE/flask/flaskGDPR/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys
