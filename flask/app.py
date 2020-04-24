@@ -7,9 +7,16 @@ import conDB as conDB
 import buildPDF
 import zap as zapM
 import pdfkit
+from rq import Queue
+from redis import Redis
+from rq.job import Job
+
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
+redis_conn = Redis()
+q = Queue(connection=redis_conn)
+
 PATH_DB = 'gdpr.db'
 
 @app.route('/', methods=['GET'])
@@ -145,56 +152,31 @@ def country():
 
 @app.route('/postDataForm', methods=['POST'])
 def postDataForm():
-    content = request.get_json()
-    swName = ''
-    nameCountry = ''
-    swPath = ''
-    dbCon = None
-    try:
-        dbCon = sql3.connect(PATH_DB)
-        cursor = dbCon.cursor()   
-        querySW = 'SELECT description FROM software where id = ?;'
-        data = cursor.execute(querySW, str(content['sw']))
-        for i in data:
-            swName = i[0]
-
-        queryCountry = 'SELECT name FROM country where id = ?;'
-        data = cursor.execute(queryCountry, str(content['country']))
-        for i in data:
-            nameCountry = i[0]
-
-        queryPATH = 'SELECT pathfiles FROM softwareCountry where softwareID = ? and countryID = ?;'
-        data = cursor.execute(queryPATH, (str(content['sw']), str(content['country'])))
-        for i in data:
-            swPath = i[0]
-
-    except Exception as e:
-        print(e)
-        abort(500, {'message': e})
-    finally:
-        if dbCon is not None:
-            try:
-                dbCon.close()
-                app.logger.info("dbcon closed {}".format(dbCon))
-            except Exception as e:
-                app.logger.error("Error closing con {}".format(e))
-    # generate pdf for gdpr and security report
-    try:
-        htmlGDPR, timestamp = buildPDF.buildPDF(content, swName, nameCountry, content['country'], content['sw'])     
-        # CALL ZAP and others with timestamp
-        #
-        # generate final pdf 
-        with open("fileGDPR-"+ timestamp + ".html", "w") as file:
-            file.write(htmlGDPR)
-        pdfkit.from_file(["fileGDPR-"+ timestamp + ".html", 'repPassive'+timestamp+'.html', 'repActive'+timestamp+'.html'], 'report-' +timestamp+ '.pdf')   
-    except Exception as e:
-        print(e)
-        abort(500, {'message': e})
-
+    from bgTask import doAllScans
+    job = q.enqueue(doAllScans, args=(request,PATH_DB))
+    print(job.result)
+    print(job.get_id())
     response = app.response_class(
-        status=201
+        status=202
     )
     return response
+
+@app.route('/tryREDIS', methods=['GET'])
+def tryREDIS():
+    from bgTask import doAllScans
+    job = q.enqueue(doAllScans)
+    print(job.result)
+    print(job.get_id())
+    response = app.response_class(
+        status=202
+    )
+    return response
+
+@app.route("/results/<job_key>", methods=['GET'])
+def get_results(job_key):
+    job = Job.fetch(job_key,connection=redis_conn)
+    return str(job.result), 200
+    
 
 @app.route('/getPDFs', methods=['GET'])
 def getPDFs():
@@ -221,6 +203,8 @@ def getPDFs():
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
+
+
 
 # # Instantiation of inherited class
 # pdf = PDF()

@@ -6,8 +6,8 @@ RUN pip3 install -r requirements.txt
 RUN wget https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.4/wkhtmltox-0.12.4_linux-generic-amd64.tar.xz
 RUN tar xf wkhtmltox-0.12.4_linux-generic-amd64.tar.xz
 RUN cp wkhtmltox/bin/wk* /usr/local/bin/
-#sudo apt-get install libxml2-dev
-
+#xsltproc
+#redis-server
 
 
 #ENTRYPOINT ["python"]

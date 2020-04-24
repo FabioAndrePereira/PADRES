@@ -95,5 +95,3 @@ def doScan(target):
         file.write(zap.core.htmlreport())
     
     #return html
-
-doScan(target)
