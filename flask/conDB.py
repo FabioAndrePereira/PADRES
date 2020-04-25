@@ -36,15 +36,28 @@ def getPrincipleHname(dbCon, phID):
 
     return data
 
-def insertPDF(dbCon, countryID, swID, timestamp, pdfs):
-    blobPDF = convertToBinaryData(pdfs)
-    queryInsert = 'INSERT INTO genPDFs(countryID, softID, timestamp, pdfs) VALUES(?, ? ,?, ?)'
+def insertPDF(dbCon, countryID, swID, timestamp, status=0):
+    # with open(timestamp + ".html", "w") as file:
+    #     file.write(pdfs)
+
+    # blobPDF = convertToBinaryData(timestamp + ".html")
+    queryInsert = 'INSERT INTO genPDFs(countryID, softID, timestamp, status) VALUES(?, ?, ?, ?)'
     cur = dbCon.cursor()
-    cur.execute(queryInsert, (countryID, swID, timestamp, blobPDF))
+    ret = cur.execute(queryInsert, (countryID, swID, timestamp, status))
+    dbCon.commit()
+    return ret.lastrowid
+
+def insertJobID(dbCon, jobID, pdfID):
+    # with open(timestamp + ".html", "w") as file:
+    #     file.write(pdfs)
+
+    # blobPDF = convertToBinaryData(timestamp + ".html")
+    queryInsert = 'UPDATE genPDFs SET job_id = ? WHERE id = ?'
+    cur = dbCon.cursor()
+    cur.execute(queryInsert, (jobID, pdfID))
     dbCon.commit()
     
 def getPDFs(dbCon):
-   #pdfsPATH = "pdfs/"
     cur = dbCon.cursor()
     pdfsQuery = 'SELECT * from genPDFs ' \
                 'join country c on genPDFs.countryID = c.id ' \

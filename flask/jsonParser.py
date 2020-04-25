@@ -60,7 +60,6 @@ def swJSON(data):
     return json.dumps(dataRet)
 
 def pdfsJSON(data):
-    #print("aqhui1")
     dataRet = []
     for i in data:
         obj = {}
@@ -68,12 +67,15 @@ def pdfsJSON(data):
         obj['country'] = i[6] 
         obj['sw'] = i[9]
         obj['name'] = i[3] + '.pdf'
-        obj['pdf'] = str(i[4])
         obj['timeStamp'] = i[3]
+        if obj['status'] == 0:
+            obj['pdf'] = "0"
+        else:
+            obj['pdf'] = i[4]
+        
         dataRet.append(obj)
     
     return json.dumps(dataRet) 
 
 def convertJSONtoDict(jsonOBJ):
     return json.loads(jsonOBJ)
-

@@ -5,7 +5,7 @@ import shutil
 from datetime import datetime
 from PyPDF2 import PdfFileReader
 
-def buildPDF(data, swName, nameCountry, countryID, swID):
+def buildPDF(data, swName, nameCountry):
     html ="""
         <!DOCTYPE html>
         <html>

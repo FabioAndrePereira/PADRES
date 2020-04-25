@@ -152,25 +152,65 @@ def country():
 
 @app.route('/postDataForm', methods=['POST'])
 def postDataForm():
-    from bgTask import doAllScans
-    job = q.enqueue(doAllScans, args=(request,PATH_DB))
-    print(job.result)
-    print(job.get_id())
-    response = app.response_class(
-        status=202
-    )
-    return response
+    content = request.get_json()
+    swName = ''
+    nameCountry = ''
+    swPath = ''
+    dbCon = None
+    try:
+        dbCon = sql3.connect(PATH_DB)
+        cursor = dbCon.cursor()   
+        querySW = 'SELECT description FROM software where id = ?;'
+        data = cursor.execute(querySW, str(content['sw']))
+        for i in data:
+            swName = i[0]
 
-@app.route('/tryREDIS', methods=['GET'])
-def tryREDIS():
-    from bgTask import doAllScans
-    job = q.enqueue(doAllScans)
-    print(job.result)
-    print(job.get_id())
-    response = app.response_class(
-        status=202
-    )
-    return response
+        queryCountry = 'SELECT name FROM country where id = ?;'
+        data = cursor.execute(queryCountry, str(content['country']))
+        for i in data:
+            nameCountry = i[0]
+
+        queryPATH = 'SELECT pathfiles FROM softwareCountry where softwareID = ? and countryID = ?;'
+        data = cursor.execute(queryPATH, (str(content['sw']), str(content['country'])))
+        for i in data:
+            swPath = i[0]
+    except Exception as e:
+        print(e)
+        abort(500, {'message': e})
+    finally:
+        if dbCon is not None:
+            try:
+                dbCon.close()
+                app.logger.info("dbcon closed {}".format(dbCon))
+            except Exception as e:
+                app.logger.error("Error closing con {}".format(e))
+                print("Error closing con {}".format(e))
+
+    # build html for gdpr
+    htmlGDPR, timestamp = buildPDF.buildPDF(content, swName, nameCountry) 
+    try:    
+        # start security scans in bg
+        con = conDB.newCon()
+        idPDF = conDB.insertPDF(con, str(content['country']), str(content['sw']), timestamp) # insere e retorna o id da inserção
+        from bgTask import doAllScans
+        job = q.enqueue(doAllScans, args=("127.0.0.1", htmlGDPR, timestamp, idPDF), job_timeout=3600)
+        jobID = str(job.get_id())
+        conDB.insertJobID(con, jobID, idPDF)
+        response = app.response_class(
+            status=202
+        )
+        return response
+    except Exception as e:
+        print(e)
+        abort(500, {'message': e})
+    finally:
+        if dbCon is not None:
+            try:
+                dbCon.close()
+                app.logger.info("dbcon closed {}".format(dbCon))
+            except Exception as e:
+                app.logger.error("Error closing con {}".format(e))
+                print("Error closing con {}".format(e))
 
 @app.route("/results/<job_key>", methods=['GET'])
 def get_results(job_key):
@@ -185,7 +225,7 @@ def getPDFs():
         con = conDB.newCon()
         data = conDB.getPDFs(con)
         response = app.response_class(
-            response=jsonParser.pdfsJSON(data.fetchall()),
+            response=jsonParser.pdfsJSON(data.fetchall(), Job, redis_conn),
             status=200,
             mimetype='application/json'
         )
