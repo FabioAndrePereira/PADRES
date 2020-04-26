@@ -64,11 +64,11 @@ def pdfsJSON(data):
     for i in data:
         obj = {}
         obj['id'] = i[0]
-        obj['country'] = i[6] 
-        obj['sw'] = i[9]
+        obj['country'] = i[8] 
+        obj['sw'] = i[11]
         obj['name'] = i[3] + '.pdf'
         obj['timeStamp'] = i[3]
-        if obj['status'] == 0:
+        if i[6] == 0:
             obj['pdf'] = "0"
         else:
             obj['pdf'] = i[4]

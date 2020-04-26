@@ -12,7 +12,9 @@ import json
 #zap = ZAPv2(proxies={'http': 'http://127.0.0.1:8090', 'https': 'http://127.0.0.1:8090'})
 
 def doScan(target, id):
-    zap = ZAPv2(proxies={'http': 'http://127.0.0.1:8090', 'https': 'http://127.0.0.1:8090'})
+    #zap = ZAPv2(proxies={'http': 'http://127.0.0.1:8090', 'https': 'http://127.0.0.1:8090'})
+    zap = ZAPv2(proxies={'http': 'http://172.19.0.3:8090', 'https': 'http://172.19.0.3:8090'})
+    
     # The scan returns a scan id to support concurrent scanning
     target = 'https://public-firing-range.appspot.com'
     print('Spidering target {}'.format(target))
@@ -44,7 +46,8 @@ def doScan(target, id):
     # with open("pdfs/" + namePscan, "w") as file:
     #     file.write(zap.core.htmlreport())
     
-
+    zap.ascan.disable_all_scanners()
+    #zap.ascan.enable_scanners(40018,4)
     scanID = zap.ascan.scan(target)
     while int(zap.ascan.status(scanID)) < 100:
         # Loop until the scanner has finished
@@ -56,10 +59,11 @@ def doScan(target, id):
     # Print vulnerabilities found by the scanning
     #print('Hosts: {}'.format(', '.join(zap.core.hosts)))
     #print('Alerts: ')
-   # pprint(zap.core.alerts(baseurl=target))
+    #pprint(zap.core.alerts(baseurl=target))
+    pprint(zap.core.htmlreport())
     nameAscan = str(id) + "-aScan.html"
-    with open("pdfs/" + nameAscan, "w") as file:
-        file.write(zap.core.htmlreport())
+    # with open("pdfs/" + nameAscan, "w") as file:
+    #     file.write(zap.core.htmlreport())
     
     return  nameAscan
 

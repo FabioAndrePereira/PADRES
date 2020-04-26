@@ -5,19 +5,34 @@ import jsonParser as jsonParser
 import pdfGenerator as pdfGen
 import conDB as conDB
 import buildPDF
-import zap as zapM
 import pdfkit
-from rq import Queue
+import redis
+import nmapScan
+import subprocess 
+import zap
+#from bgTask import doAllScans
+from rq import Worker, Queue, Connection
 from redis import Redis
 from rq.job import Job
 
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
-redis_conn = Redis()
+redis_conn = Redis(host='redis', port=6379)
 q = Queue(connection=redis_conn)
 
 PATH_DB = 'gdpr.db'
+
+@app.cli.command("run_worker")
+def runWorker():
+    listen = ['default']
+    #redis_url = 'redis://localhost:6379'
+    redis_url = 'redis://redis:6379/0'
+
+    conn = redis.from_url(redis_url)
+    with Connection(conn):
+        worker = Worker(listen)
+        worker.work()
 
 @app.route('/', methods=['GET'])
 def entry():
@@ -175,7 +190,6 @@ def postDataForm():
         for i in data:
             swPath = i[0]
     except Exception as e:
-        print(e)
         abort(500, {'message': e})
     finally:
         if dbCon is not None:
@@ -187,12 +201,15 @@ def postDataForm():
                 print("Error closing con {}".format(e))
 
     # build html for gdpr
+    print("START pdf")
     htmlGDPR, timestamp = buildPDF.buildPDF(content, swName, nameCountry) 
     try:    
         # start security scans in bg
         con = conDB.newCon()
-        idPDF = conDB.insertPDF(con, str(content['country']), str(content['sw']), timestamp) # insere e retorna o id da inserção
-        from bgTask import doAllScans
+        idPDF = conDB.createPDFentry(con, str(content['country']), str(content['sw']), timestamp) # insere e retorna o id da inserção
+        app.logger.error("aqui crl 0")
+        print("START JOB")
+        app.logger.error("aqui crl 1")
         job = q.enqueue(doAllScans, args=("127.0.0.1", htmlGDPR, timestamp, idPDF), job_timeout=3600)
         jobID = str(job.get_id())
         conDB.insertJobID(con, jobID, idPDF)
@@ -201,7 +218,6 @@ def postDataForm():
         )
         return response
     except Exception as e:
-        print(e)
         abort(500, {'message': e})
     finally:
         if dbCon is not None:
@@ -225,7 +241,7 @@ def getPDFs():
         con = conDB.newCon()
         data = conDB.getPDFs(con)
         response = app.response_class(
-            response=jsonParser.pdfsJSON(data.fetchall(), Job, redis_conn),
+            response=jsonParser.pdfsJSON(data.fetchall()),
             status=200,
             mimetype='application/json'
         )
@@ -243,6 +259,36 @@ def getPDFs():
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
+
+def doAllScans(ipTarget, htmlGDPR, timestamp, idPDF):
+   # perform nmap scan
+   app.logger.error("NMAP")
+   out = nmapScan.nmapScan(ipTarget)
+   nameXML = "pdfs/" + str(idPDF) + ".xml"
+   nameHTML = "pdfs/" + str(idPDF) + ".html"
+   with open("pdfs/" + str(idPDF) + ".xml", "w") as file:
+      file.write(out)
+
+   process = subprocess.call(['xsltproc', nameXML, '-o', nameHTML ])
+   app.logger.error("ZAP")
+   # perform zap scan
+   htmlaScan =  zap.doScan(ipTarget, idPDF)
+   # build final pdf
+   nameHTMLGDPR = "pdfs/" + str(idPDF) + "-gdpr.html"
+   with open(nameHTMLGDPR, "w") as file:
+      file.write(htmlGDPR)
+
+   reportName = 'pdfs/report-' + str(idPDF) + '.pdf'
+   pdfkit.from_file([nameHTMLGDPR, nameHTML, "pdfs/" + htmlaScan], reportName)  
+   
+   conDB.insertPDF(idPDF, reportName)
+
+   # for file in os.listdir("pdfs/"):
+   #    if file == nameHTML.split("/")[1] or file == nameXML.split("/")[1] or file == nameHTMLGDPR.split("/")[1] or file == htmlaScan:
+   #          os.remove(file)
+
+    
+   return
 
 
 

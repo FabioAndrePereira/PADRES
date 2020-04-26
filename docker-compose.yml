@@ -3,20 +3,56 @@ version: '3'
 services: 
   owaspZAP:
     image: owasp/zap2docker-stable
+    networks: 
+      main:
+        ipv4_address: 172.19.0.3
     ports:
       - 8090:8090
     command:  zap.sh -daemon -port 8090 -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true -config api.disablekey=true -host 0.0.0.0
-  # flaskgdpr:
-  #   build: ./flask # dir do projeto
-  #   volumes:
-  #     - ./flask:/app/flask
-  #   ports: 
-  #     - 5000:5000
-  # gdprinterface:
-  #   build: ./gdprInterface
-  #   volumes:
-  #     - ./gdprInterface/src:/app/gdprinterface/src
-  #   ports: 
-  #     - 4200:4200
-  #   depends_on: 
-  #     - flaskgdpr
+  flaskgdpr:
+    build: ./flask # dir do projeto
+    image: flaskgdpr
+    container_name: flaskgdpr
+    volumes:
+      - ./flask:/usr/src/app/
+      - ./flask/pdfs:/usr/src/app/pdfs
+    networks: 
+      main:
+        ipv4_address: 172.19.0.2
+    ports: 
+      - 5000:5000
+    command: flask run --host=0.0.0.0
+  gdprinterface:
+    build: ./gdprInterface
+    volumes:
+      - ./gdprInterface/src:/app/gdprinterface/src
+    networks: 
+      main:
+        ipv4_address: 172.19.0.5  
+    ports: 
+      - 4200:4200
+    depends_on: 
+      - flaskgdpr    
+  rqworker: # python rq worker for bg jobs
+    image: flaskgdpr
+    networks: 
+      main:
+        ipv4_address: 172.19.0.6  
+    command: flask run_worker
+    depends_on: 
+      - redis
+  redis:
+    image: redis:alpine
+    networks: 
+      main:
+        ipv4_address: 172.19.0.4  
+    ports:
+      - 6379:6379
+
+networks:
+  main: 
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.19.0.0/16
+        #- gateway: 172.18.0.1

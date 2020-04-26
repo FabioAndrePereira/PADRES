@@ -36,7 +36,7 @@ def getPrincipleHname(dbCon, phID):
 
     return data
 
-def insertPDF(dbCon, countryID, swID, timestamp, status=0):
+def createPDFentry(dbCon, countryID, swID, timestamp, status=0):
     # with open(timestamp + ".html", "w") as file:
     #     file.write(pdfs)
 
@@ -65,3 +65,22 @@ def getPDFs(dbCon):
     data = cur.execute(pdfsQuery)
 
     return data
+
+def insertPDF(idPDF, pdfName): # faz update na tabela pdf depois de acabar o job
+    conDB = None
+    pdfBLOB = convertToBinaryData(pdfName)
+    try:
+        dbCon = sql3.connect(PATH_DB)
+        queryInsert = 'UPDATE genPDFs SET pdfs = ? and status = 1 WHERE id = ?'
+        cur = dbCon.cursor()
+        cur.execute(queryInsert, (pdfBLOB, idPDF))
+    except Exception as e:
+        pass
+    finally:
+        if dbCon is not None:
+            try:
+                dbCon.close()
+            except Exception as e:
+                print("Error closing con {}".format(e))
+    
+    
