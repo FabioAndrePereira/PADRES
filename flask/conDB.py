@@ -56,6 +56,7 @@ def insertJobID(dbCon, jobID, pdfID):
     cur = dbCon.cursor()
     cur.execute(queryInsert, (jobID, pdfID))
     dbCon.commit()
+
     
 def getPDFs(dbCon):
     cur = dbCon.cursor()
@@ -66,16 +67,17 @@ def getPDFs(dbCon):
 
     return data
 
-def insertPDF(idPDF, pdfName): # faz update na tabela pdf depois de acabar o job
+def insertPDF(idPDF, pdfBLOB): # faz update na tabela pdf depois de acabar o job
     conDB = None
-    pdfBLOB = convertToBinaryData(pdfName)
     try:
         dbCon = sql3.connect(PATH_DB)
-        queryInsert = 'UPDATE genPDFs SET pdfs = ? and status = 1 WHERE id = ?'
+        queryInsert = 'UPDATE genPDFs SET pdfs = ?, status = 1 WHERE id = ?'
         cur = dbCon.cursor()
         cur.execute(queryInsert, (pdfBLOB, idPDF))
+        dbCon.commit()
     except Exception as e:
         pass
+        return "error"
     finally:
         if dbCon is not None:
             try:

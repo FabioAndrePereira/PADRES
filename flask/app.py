@@ -201,7 +201,6 @@ def postDataForm():
                 print("Error closing con {}".format(e))
 
     # build html for gdpr
-    print("START pdf")
     htmlGDPR, timestamp = buildPDF.buildPDF(content, swName, nameCountry) 
     try:    
         # start security scans in bg
@@ -218,6 +217,7 @@ def postDataForm():
         )
         return response
     except Exception as e:
+        print(e)
         abort(500, {'message': e})
     finally:
         if dbCon is not None:
@@ -239,6 +239,18 @@ def getPDFs():
     con = None
     try:
         con = conDB.newCon()
+        data = conDB.getPDFs(con).fetchall()
+        # ter em conta time out to job result
+        # ver se status é 0 o u 1 antes de chamar result
+        for i in data:
+            if i[6] == 0: # status for 0 faz call para obter resultado do job 
+                job = Job.fetch(i[5],connection=redis_conn)
+                #ver se ja cabou ou n
+                if job.get_status() == "finished":
+                    pdf = job.result[1]
+                    conDB.insertPDF(i[0], pdf)
+            else:
+                continue
         data = conDB.getPDFs(con)
         response = app.response_class(
             response=jsonParser.pdfsJSON(data.fetchall()),
@@ -262,7 +274,7 @@ if __name__ == '__main__':
 
 def doAllScans(ipTarget, htmlGDPR, timestamp, idPDF):
    # perform nmap scan
-   app.logger.error("NMAP")
+#    app.logger.error("NMAP")
    out = nmapScan.nmapScan(ipTarget)
    nameXML = "pdfs/" + str(idPDF) + ".xml"
    nameHTML = "pdfs/" + str(idPDF) + ".html"
@@ -270,7 +282,7 @@ def doAllScans(ipTarget, htmlGDPR, timestamp, idPDF):
       file.write(out)
 
    process = subprocess.call(['xsltproc', nameXML, '-o', nameHTML ])
-   app.logger.error("ZAP")
+   #app.logger.error("ZAP")
    # perform zap scan
    htmlaScan =  zap.doScan(ipTarget, idPDF)
    # build final pdf
@@ -279,17 +291,19 @@ def doAllScans(ipTarget, htmlGDPR, timestamp, idPDF):
       file.write(htmlGDPR)
 
    reportName = 'pdfs/report-' + str(idPDF) + '.pdf'
-   pdfkit.from_file([nameHTMLGDPR, nameHTML, "pdfs/" + htmlaScan], reportName)  
+   pdf = pdfkit.from_file([nameHTMLGDPR, nameHTML, "pdfs/" + htmlaScan], False)  
+   #pdf = pdfkit.from_file(nameHTMLGDPR, False)  
+
    
-   conDB.insertPDF(idPDF, reportName)
+  # val = conDB.insertPDF(idPDF, reportName)
+   #val = conDB.insertPDF(idPDF, nameHTMLGDPR)
 
    # for file in os.listdir("pdfs/"):
    #    if file == nameHTML.split("/")[1] or file == nameXML.split("/")[1] or file == nameHTMLGDPR.split("/")[1] or file == htmlaScan:
    #          os.remove(file)
-
+   #app.logger.error("do scans " + str(pdf)) 
+   return 1, pdf
     
-   return
-
 
 
 # # Instantiation of inherited class

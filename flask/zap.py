@@ -42,9 +42,9 @@ def doScan(target, id):
     #print('Hosts: {}'.format(', '.join(zap.core.hosts)))
     #print('Alerts: ')
     # pprint(zap.core.alerts())
-    # namePscan = str(id) + "-pScan.html"
-    # with open("pdfs/" + namePscan, "w") as file:
-    #     file.write(zap.core.htmlreport())
+    namePscan = str(id) + "-pScan.html"
+    with open("pdfs/" + namePscan, "w") as file:
+        file.write(zap.core.htmlreport())
     
     zap.ascan.disable_all_scanners()
     #zap.ascan.enable_scanners(40018,4)
@@ -60,10 +60,11 @@ def doScan(target, id):
     #print('Hosts: {}'.format(', '.join(zap.core.hosts)))
     #print('Alerts: ')
     #pprint(zap.core.alerts(baseurl=target))
-    pprint(zap.core.htmlreport())
+    #pprint(zap.core.htmlreport())
+    data = zap.core.htmlreport()
     nameAscan = str(id) + "-aScan.html"
-    # with open("pdfs/" + nameAscan, "w") as file:
-    #     file.write(zap.core.htmlreport())
+    with open("pdfs/" + nameAscan, "w") as file:
+        file.write(data)
     
     return  nameAscan
 

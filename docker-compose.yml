@@ -15,7 +15,7 @@ services:
     container_name: flaskgdpr
     volumes:
       - ./flask:/usr/src/app/
-      - ./flask/pdfs:/usr/src/app/pdfs
+     # - ./flask/pdfs:/usr/src/app/pdfs
     networks: 
       main:
         ipv4_address: 172.19.0.2
