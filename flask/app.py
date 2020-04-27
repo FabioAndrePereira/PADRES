@@ -1,5 +1,5 @@
 import sqlite3 as sql3
-from flask import Flask, abort, request
+from flask import Flask, abort, request, send_file
 from flask_cors import CORS
 import jsonParser as jsonParser
 import pdfGenerator as pdfGen
@@ -14,6 +14,8 @@ import zap
 from rq import Worker, Queue, Connection
 from redis import Redis
 from rq.job import Job
+from pdfrw import PdfReader, PdfWriter
+import os
 
 
 app = Flask(__name__)
@@ -242,15 +244,19 @@ def getPDFs():
         data = conDB.getPDFs(con).fetchall()
         # ter em conta time out to job result
         # ver se status é 0 o u 1 antes de chamar result
-        for i in data:
-            if i[6] == 0: # status for 0 faz call para obter resultado do job 
-                job = Job.fetch(i[5],connection=redis_conn)
-                #ver se ja cabou ou n
-                if job.get_status() == "finished":
-                    pdf = job.result[1]
-                    conDB.insertPDF(i[0], pdf)
-            else:
-                continue
+        folder = os.listdir("pdfs/")
+        app.logger.error(folder)
+        # for i in data:
+        #     if i[6] == 0: # status for 0 faz call para obter resultado do job 
+        #         job = Job.fetch(i[5],connection=redis_conn)
+        #         #ver se ja cabou ou n
+        #         if job.get_status() == "finished":
+        #             pdf = job.result[1]
+        #             #app.logger.error
+        #             #PdfWriter(job[2], trailer=pdf).write()
+        #             #conDB.insertPDF(i[0], pdf)
+        #     else:
+        #         continue
         data = conDB.getPDFs(con)
         response = app.response_class(
             response=jsonParser.pdfsJSON(data.fetchall()),
@@ -268,6 +274,13 @@ def getPDFs():
         except Exception as e:
             app.logger.error("Error closing con {}".format(e))
 
+@app.route('/return-files/')
+def return_files_tut():
+	try:
+		return send_file('pdfs/report-56.pdf', attachment_filename='report-56.pdf')
+	except Exception as e:
+		return str(e)
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
@@ -275,23 +288,29 @@ if __name__ == '__main__':
 def doAllScans(ipTarget, htmlGDPR, timestamp, idPDF):
    # perform nmap scan
 #    app.logger.error("NMAP")
-   out = nmapScan.nmapScan(ipTarget)
-   nameXML = "pdfs/" + str(idPDF) + ".xml"
-   nameHTML = "pdfs/" + str(idPDF) + ".html"
-   with open("pdfs/" + str(idPDF) + ".xml", "w") as file:
-      file.write(out)
+    out = nmapScan.nmapScan(ipTarget)
+    nameXML = "pdfs/" + str(idPDF) + ".xml"
+    nameHTML = "pdfs/" + str(idPDF) + ".html"
+    with open("pdfs/" + str(idPDF) + ".xml", "w") as file:
+        file.write(out)
 
-   process = subprocess.call(['xsltproc', nameXML, '-o', nameHTML ])
-   #app.logger.error("ZAP")
-   # perform zap scan
-   htmlaScan =  zap.doScan(ipTarget, idPDF)
-   # build final pdf
-   nameHTMLGDPR = "pdfs/" + str(idPDF) + "-gdpr.html"
-   with open(nameHTMLGDPR, "w") as file:
-      file.write(htmlGDPR)
+    process = subprocess.call(['xsltproc', nameXML, '-o', nameHTML ])
+    #app.logger.error("ZAP")
+    # perform zap scan
+    htmlaScan =  zap.doScan(ipTarget, idPDF)
+    # build final pdf
+    nameHTMLGDPR = "pdfs/" + str(idPDF) + "-gdpr.html"
+    with open(nameHTMLGDPR, "w") as file:
+        file.write(htmlGDPR)
 
-   reportName = 'pdfs/report-' + str(idPDF) + '.pdf'
-   pdf = pdfkit.from_file([nameHTMLGDPR, nameHTML, "pdfs/" + htmlaScan], False)  
+    reportName = "/usr/src/app/pdfs/report-" + str(idPDF) + ".pdf"
+    
+    pdfkit.from_file([nameHTMLGDPR, nameHTML, htmlaScan], reportName)  
+    #x = pdfkit.from_file([nameHTMLGDPR, nameHTML], reportName)  
+    
+    pdf = PdfReader(reportName)
+    return 1, pdf, reportName
+    #return x
    #pdf = pdfkit.from_file(nameHTMLGDPR, False)  
 
    
@@ -302,7 +321,7 @@ def doAllScans(ipTarget, htmlGDPR, timestamp, idPDF):
    #    if file == nameHTML.split("/")[1] or file == nameXML.split("/")[1] or file == nameHTMLGDPR.split("/")[1] or file == htmlaScan:
    #          os.remove(file)
    #app.logger.error("do scans " + str(pdf)) 
-   return 1, pdf
+   
     
 
 

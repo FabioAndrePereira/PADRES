@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import {HistoryService} from './history.service';
 
+
 @Component({
 	selector: 'app-history',
 	templateUrl: './history.component.html',
@@ -11,6 +12,7 @@ export class HistoryComponent implements OnInit {
 	displayedColumns: string[] = ['id', 'country', 'sw', 'name', 'timeStamp'];
 	pdfsData: History[] = [];
 	hover = false;
+	pdfBLOBurl;
 	ngOnInit() {
 		this.historyService.getPdfs().subscribe(
 			data => {
@@ -23,7 +25,18 @@ export class HistoryComponent implements OnInit {
 		);
 	}
 	displayPDF(row) {
-		console.log(row);
+		this.historyService.getPDF().subscribe(
+			data => {
+				console.log(data)
+				var blob = new Blob([data], {type: 'application/pdf'});
+				var fileURL = URL.createObjectURL(blob);
+				window.open(fileURL)
+			},
+			error => {
+				console.log(error);
+			},
+			() => {}
+		);
 	}
 	// changeBG() {
 	// 	this.over ? this.over = false : this.over = true;

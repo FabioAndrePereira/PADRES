@@ -1,5 +1,5 @@
 import json
-
+import pdfkit
 
 
 def rulesJSON(data):
@@ -71,6 +71,7 @@ def pdfsJSON(data):
         if i[6] == 0: # status
             obj['pdf'] = "0"
         else:
+            #print(i[4])
             obj['pdf'] = str(i[4])
         
         dataRet.append(obj)

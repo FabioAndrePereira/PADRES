@@ -15,4 +15,10 @@ export class HistoryService {
 			catchError(err => throwError(err))
 		);
 	}
+
+	getPDF(): Observable<any> {
+		return this.http.get(baseURL+ "return-files/", { responseType: 'blob' }).pipe(
+			catchError(err => throwError(err))
+		);
+	}
 }

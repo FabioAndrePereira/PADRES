@@ -15,6 +15,7 @@ services:
     container_name: flaskgdpr
     volumes:
       - ./flask:/usr/src/app/
+      - static-content:/usr/src/app/pdfs
      # - ./flask/pdfs:/usr/src/app/pdfs
     networks: 
       main:
@@ -37,7 +38,9 @@ services:
     image: flaskgdpr
     networks: 
       main:
-        ipv4_address: 172.19.0.6  
+        ipv4_address: 172.19.0.6 
+    volumes: 
+      - static-content:/usr/src/app/pdfs 
     command: flask run_worker
     depends_on: 
       - redis
@@ -56,3 +59,6 @@ networks:
       config:
         - subnet: 172.19.0.0/16
         #- gateway: 172.18.0.1
+
+volumes:
+  static-content:
