@@ -1,4 +1,5 @@
 import sqlite3 as sql3
+import pickle
 
 PATH_DB = 'gdpr.db'
 
@@ -67,16 +68,27 @@ def getPDFs(dbCon):
 
     return data
 
+def getSelectedPDF(dbCon, pdfID):
+    cur = dbCon.cursor()
+    pdfsQuery = 'SELECT pdfs from genPDFs WHERE id = ?'
+
+                
+    data = cur.execute(pdfsQuery, pdfID)
+
+    return data
+
 def insertPDF(idPDF, pdfBLOB): # faz update na tabela pdf depois de acabar o job
     conDB = None
     try:
         dbCon = sql3.connect(PATH_DB)
         queryInsert = 'UPDATE genPDFs SET pdfs = ?, status = 1 WHERE id = ?'
         cur = dbCon.cursor()
-        cur.execute(queryInsert, (pdfBLOB, idPDF))
+        # http://www.numericalexpert.com/blog/sqlite_blob_time/
+        x = cur.execute(queryInsert, (sql3.Binary(pdfBLOB), idPDF))
         dbCon.commit()
+        return x
     except Exception as e:
-        pass
+        raise e
         return "error"
     finally:
         if dbCon is not None:
@@ -84,5 +96,3 @@ def insertPDF(idPDF, pdfBLOB): # faz update na tabela pdf depois de acabar o job
                 dbCon.close()
             except Exception as e:
                 print("Error closing con {}".format(e))
-    
-    

@@ -4,6 +4,7 @@ import {MatTableModule} from '@angular/material/table';
 import {HistoryService} from './history.service';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 
+
 @NgModule({
 	declarations: [
 		HistoryComponent

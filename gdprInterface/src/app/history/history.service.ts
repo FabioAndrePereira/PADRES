@@ -16,8 +16,8 @@ export class HistoryService {
 		);
 	}
 
-	getPDF(): Observable<any> {
-		return this.http.get(baseURL+ "return-files/", { responseType: 'blob' }).pipe(
+	getPDF(pdfID): Observable<any> {
+		return this.http.get(baseURL+ "returnPDF/" + pdfID, { responseType: 'blob' }).pipe(
 			catchError(err => throwError(err))
 		);
 	}

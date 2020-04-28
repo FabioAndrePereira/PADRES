@@ -16,6 +16,9 @@ from redis import Redis
 from rq.job import Job
 from pdfrw import PdfReader, PdfWriter
 import os
+import time
+import atexit
+from apscheduler.schedulers.background import BackgroundScheduler
 
 
 app = Flask(__name__)
@@ -23,7 +26,30 @@ cors = CORS(app, resources={r"/*": {"origins": "*"}})
 redis_conn = Redis(host='redis', port=6379)
 q = Queue(connection=redis_conn)
 
-PATH_DB = 'gdpr.db'
+def job_function():
+    con = conDB.newCon()
+    data = conDB.getPDFs(con).fetchall()
+    # ter em conta time out to job result
+    # ver se status é 0 o u 1 antes de chamar result
+    for i in data:
+        if i[6] == 0: # status for 0 faz call para obter resultado do job 
+            job = Job.fetch(i[5],connection=redis_conn)
+            #ver se ja cabou ou n
+            if job.get_status() == "finished":
+                pdfName = job.result[1] # full path
+                with open(pdfName, 'rb') as input_file:
+                    ablob = input_file.read()
+                    va = conDB.insertPDF(i[0], ablob)
+        else:
+            continue
+
+sched = BackgroundScheduler(daemon=True)
+sched.add_job(job_function,'interval',seconds=60*3)
+sched.start()
+
+#https://stackoverflow.com/questions/21214270/scheduling-a-function-to-run-every-hour-on-flask
+atexit.register(lambda: sched.shutdown(wait=False))
+#PATH_DB = 'gdpr.db'
 
 @app.cli.command("run_worker")
 def runWorker():
@@ -45,7 +71,7 @@ def entry():
 def rules(cID):
     dbCon = None
     try:
-        dbCon = sql3.connect(PATH_DB)
+        dbCon = conDB.newCon()
         cursor = dbCon.cursor()
         queryRulesCountry = 'SELECT id as rID, definition as rDefinition FROM  rule ' \
                             'INNER JOIN ruleCountry rC ON rule.id = rC.ruleID ' \
@@ -72,7 +98,7 @@ def rules(cID):
 def principles(phID):
     dbCon = None
     try:
-        dbCon = sql3.connect(PATH_DB)
+        dbCon = conDB.newCon()
         data = conDB.getPrinciples(dbCon, phID)
         response = app.response_class(
             response=jsonParser.principlesJSON(data.fetchall()),
@@ -94,7 +120,7 @@ def principles(phID):
 def sw(cID):
     dbCon = None
     try:
-        dbCon = sql3.connect(PATH_DB)
+        dbCon = conDB.newCon()
         cursor = dbCon.cursor()
         queryPrinciples = 'SELECT * FROM software;'
         data = cursor.execute(queryPrinciples)
@@ -124,7 +150,7 @@ def sw(cID):
 def principleH():
     dbCon = None
     try:
-        dbCon = sql3.connect(PATH_DB)
+        dbCon = conDB.newCon()
         data = conDB.getPrincipleHeader(dbCon)
         response = app.response_class(
             response=jsonParser.phJSON(data.fetchall()),
@@ -146,7 +172,7 @@ def principleH():
 def country():
     dbCon = None
     try:
-        dbCon = sql3.connect(PATH_DB)
+        dbCon = conDB.newCon()
         cursor = dbCon.cursor()
         queryCountry = 'SELECT * from country;'
         data = cursor.execute(queryCountry)
@@ -175,7 +201,7 @@ def postDataForm():
     swPath = ''
     dbCon = None
     try:
-        dbCon = sql3.connect(PATH_DB)
+        dbCon = conDB.newCon()
         cursor = dbCon.cursor()   
         querySW = 'SELECT description FROM software where id = ?;'
         data = cursor.execute(querySW, str(content['sw']))
@@ -241,22 +267,6 @@ def getPDFs():
     con = None
     try:
         con = conDB.newCon()
-        data = conDB.getPDFs(con).fetchall()
-        # ter em conta time out to job result
-        # ver se status é 0 o u 1 antes de chamar result
-        folder = os.listdir("pdfs/")
-        app.logger.error(folder)
-        # for i in data:
-        #     if i[6] == 0: # status for 0 faz call para obter resultado do job 
-        #         job = Job.fetch(i[5],connection=redis_conn)
-        #         #ver se ja cabou ou n
-        #         if job.get_status() == "finished":
-        #             pdf = job.result[1]
-        #             #app.logger.error
-        #             #PdfWriter(job[2], trailer=pdf).write()
-        #             #conDB.insertPDF(i[0], pdf)
-        #     else:
-        #         continue
         data = conDB.getPDFs(con)
         response = app.response_class(
             response=jsonParser.pdfsJSON(data.fetchall()),
@@ -274,13 +284,21 @@ def getPDFs():
         except Exception as e:
             app.logger.error("Error closing con {}".format(e))
 
-@app.route('/return-files/')
-def return_files_tut():
-	try:
-		return send_file('pdfs/report-56.pdf', attachment_filename='report-56.pdf')
-	except Exception as e:
-		return str(e)
-
+@app.route('/returnPDF/<pdfID>')
+def returnPDF(pdfID):
+    reportName = "/usr/src/app/pdfs/report-" + str(pdfID) + ".pdf"
+    if not os.path.exists(reportName):  
+        app.logger.error("buildpdf")
+        con = conDB.newCon()
+        data = conDB.getSelectedPDF(con, pdfID).fetchone()
+        with open(reportName, 'wb') as output_file:
+            output_file.write(data)
+    try:
+        app.logger.error(os.path.exists(reportName))
+        return send_file(reportName, attachment_filename='report-' + str(pdfID) + '.pdf')
+    except Exception as e:
+	    return str(e)
+    
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
@@ -308,8 +326,8 @@ def doAllScans(ipTarget, htmlGDPR, timestamp, idPDF):
     pdfkit.from_file([nameHTMLGDPR, nameHTML, htmlaScan], reportName)  
     #x = pdfkit.from_file([nameHTMLGDPR, nameHTML], reportName)  
     
-    pdf = PdfReader(reportName)
-    return 1, pdf, reportName
+    #pdf = PdfReader(reportName)
+    return 1, reportName
     #return x
    #pdf = pdfkit.from_file(nameHTMLGDPR, False)  
 

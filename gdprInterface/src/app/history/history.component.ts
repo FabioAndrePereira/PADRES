@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import {HistoryService} from './history.service';
-
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
 	selector: 'app-history',
@@ -8,7 +8,7 @@ import {HistoryService} from './history.service';
 	styleUrls: ['./history.component.css']
 })
 export class HistoryComponent implements OnInit {
-	constructor(private historyService: HistoryService) { }
+	constructor(private historyService: HistoryService, private toastr: ToastrService) { }
 	displayedColumns: string[] = ['id', 'country', 'sw', 'name', 'timeStamp'];
 	pdfsData: History[] = [];
 	hover = false;
@@ -25,18 +25,22 @@ export class HistoryComponent implements OnInit {
 		);
 	}
 	displayPDF(row) {
-		this.historyService.getPDF().subscribe(
-			data => {
-				console.log(data)
-				var blob = new Blob([data], {type: 'application/pdf'});
-				var fileURL = URL.createObjectURL(blob);
-				window.open(fileURL)
-			},
-			error => {
-				console.log(error);
-			},
-			() => {}
-		);
+		if (row.status == 0){
+			this.toastr.info('PDF not available yet!');
+		}
+		else {
+			this.historyService.getPDF(row.id).subscribe(
+				data => {
+					var blob = new Blob([data], {type: 'application/pdf'});
+					var fileURL = URL.createObjectURL(blob);
+					window.open(fileURL)
+				},
+				error => {
+					console.log(error);
+				},
+				() => {}
+			);
+		}
 	}
 	// changeBG() {
 	// 	this.over ? this.over = false : this.over = true;

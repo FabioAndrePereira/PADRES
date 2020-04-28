@@ -9,6 +9,7 @@ import {ToggleButtonModule} from 'primeng/togglebutton';
 import {MatSelectModule} from '@angular/material';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 
+
 @NgModule({
     declarations: [
         PrinciplesComponent

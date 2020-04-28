@@ -68,12 +68,7 @@ def pdfsJSON(data):
         obj['sw'] = i[11]
         obj['name'] = i[3] + '.pdf'
         obj['timeStamp'] = i[3]
-        if i[6] == 0: # status
-            obj['pdf'] = "0"
-        else:
-            #print(i[4])
-            obj['pdf'] = str(i[4])
-        
+        obj['status'] = i[6]
         dataRet.append(obj)
     
     return json.dumps(dataRet) 

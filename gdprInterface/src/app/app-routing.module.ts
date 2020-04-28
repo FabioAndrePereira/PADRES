@@ -8,7 +8,7 @@ const routes: Routes = [
   { path: 'gdpr/new', component: PrinciplesComponent },
   { path: 'gdpr/history', component: HistoryComponent},
   { path: 'home', component: HomeComponent  },
-  { path: '', redirectTo: 'home', pathMatch: 'full'}
+  { path: '', redirectTo: 'gdpr/history', pathMatch: 'full'}
 ];
 
 @NgModule({

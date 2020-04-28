@@ -10,6 +10,7 @@ import { PrincipleModule} from './principles/principle.module';
 import { HomeComponent} from './home/home.component';
 import { HistoryModule } from './history/history.module';
 
+import { ToastrModule } from 'ngx-toastr';
 
 @NgModule({
     declarations: [
@@ -21,7 +22,8 @@ import { HistoryModule } from './history/history.module';
         AppRoutingModule,
         HttpClientModule,
         PrincipleModule,
-        HistoryModule
+        HistoryModule,
+		ToastrModule.forRoot()
     ],
     providers: [],
     bootstrap: [AppComponent],

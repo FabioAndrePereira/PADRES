@@ -4,6 +4,7 @@ import {PrincipleService} from './principle.service';
 import {Principle} from './principle';
 import {FormArray, FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
 import {Router} from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
     selector: 'app-rules',
@@ -33,7 +34,7 @@ export class PrinciplesComponent implements OnInit {
     selectedCountry: number;
     selectedSW: number;
 
-    constructor(private principleService: PrincipleService, private fb: FormBuilder, private router: Router) {
+    constructor(private principleService: PrincipleService, private fb: FormBuilder, private router: Router,  private toastr: ToastrService) {
         this.createForm();
     }
 
@@ -148,15 +149,15 @@ export class PrinciplesComponent implements OnInit {
         const formD = this.formP.value;
         this.principleService.postDataForm(formD, this.selectedSW, this.selectedCountry).subscribe(
             data => {
-
+				this.toastr.success('Data sent successfully');
             },
             error1 => {
                 console.log(error1);
-
+				this.toastr.error('Error sending data' + error1.message);
             },
             () => {
                 this.formP.reset();
-                this.router.navigate(['/home']);
+                this.router.navigate(['gdpr/history']);
             }
         );
     }
