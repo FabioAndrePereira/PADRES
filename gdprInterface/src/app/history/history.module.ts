@@ -1,8 +1,8 @@
-import {NgModule} from '@angular/core';
-import {HistoryComponent} from './history.component';
-import {MatTableModule} from '@angular/material/table';
-import {HistoryService} from './history.service';
-import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import { NgModule } from '@angular/core';
+import { HistoryComponent } from './history.component';
+import { MatTableModule } from '@angular/material/table';
+import { HistoryService } from './history.service';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 
 @NgModule({

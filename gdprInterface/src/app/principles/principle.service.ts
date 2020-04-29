@@ -46,13 +46,16 @@ export class PrincipleService {
         )
     }
     
-    postDataForm(data: any, swid: number, cID: number): Observable<any>{
+    postDataForm(data: any, swid: number, cID: number, opt): Observable<any>{
         const httpOptions2 = {
             headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
             observe: 'response' as 'response'
         };
-        const dataJSON = JSON.stringify(data);
-        console.log(dataJSON);
+        data["doNMAP"] = opt.doNMAP;
+		data["NMAPip"] = opt.NMAPip;
+		data["ZAPurl"] = opt.ZAPurl;
+		data["doZAP"] = opt.doZAP;
+		const dataJSON = JSON.stringify(data);
         return  this.http.post(baseURL + 'postDataForm', dataJSON, httpOptions2).pipe(
             catchError(err =>  throwError(err))
         )

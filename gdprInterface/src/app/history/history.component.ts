@@ -1,20 +1,23 @@
-import { Component, OnInit } from '@angular/core';
-import {HistoryService} from './history.service';
+import {Component, OnDestroy, OnInit} from '@angular/core';
+import { HistoryService} from './history.service';
 import { ToastrService } from 'ngx-toastr';
+import {interval, Observable, Subscription} from 'rxjs';
 
 @Component({
 	selector: 'app-history',
 	templateUrl: './history.component.html',
 	styleUrls: ['./history.component.css']
 })
-export class HistoryComponent implements OnInit {
-	constructor(private historyService: HistoryService, private toastr: ToastrService) { }
+export class HistoryComponent implements OnInit, OnDestroy {
+	constructor(
+		private historyService: HistoryService,
+		private toastr: ToastrService) { }
+
 	displayedColumns: string[] = ['id', 'country', 'sw', 'name', 'timeStamp'];
 	pdfsData: History[] = [];
-	hover = false;
-	pdfBLOBurl;
+	subSched: Subscription;
 	ngOnInit() {
-		this.historyService.getPdfs().subscribe(
+		let sub = this.historyService.getPdfs().subscribe(
 			data => {
 				this.pdfsData = data;
 			},
@@ -23,6 +26,18 @@ export class HistoryComponent implements OnInit {
 			},
 			() => {}
 		);
+		//sub.unsubscribe();
+		this.subSched = interval(60000).subscribe((val) => {
+			this.historyService.getPdfs().subscribe(
+				data => {
+					this.pdfsData = data;
+				},
+				error => {
+					console.log(error);
+				},
+				() => {}
+			);
+		});
 	}
 	displayPDF(row) {
 		if (row.status == 0){
@@ -42,9 +57,11 @@ export class HistoryComponent implements OnInit {
 			);
 		}
 	}
-	// changeBG() {
-	// 	this.over ? this.over = false : this.over = true;
-	// }
+
+	ngOnDestroy(): void {
+		this.subSched.unsubscribe();
+	}
+
 }
 
 export interface History {

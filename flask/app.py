@@ -44,7 +44,7 @@ def job_function():
             continue
 
 sched = BackgroundScheduler(daemon=True)
-sched.add_job(job_function,'interval',seconds=60*3)
+sched.add_job(job_function,'interval',seconds=60)
 sched.start()
 
 #https://stackoverflow.com/questions/21214270/scheduling-a-function-to-run-every-hour-on-flask
@@ -237,7 +237,8 @@ def postDataForm():
         app.logger.error("aqui crl 0")
         print("START JOB")
         app.logger.error("aqui crl 1")
-        job = q.enqueue(doAllScans, args=("127.0.0.1", htmlGDPR, timestamp, idPDF), job_timeout=3600)
+        job = q.enqueue(doAllScans, args=(htmlGDPR, timestamp, idPDF, content["doNMAP"], str(content["NMAPip"]), 
+        content["doZAP"] ,str(content["ZAPurl"])), job_timeout=3600)
         jobID = str(job.get_id())
         conDB.insertJobID(con, jobID, idPDF)
         response = app.response_class(
@@ -303,27 +304,53 @@ def returnPDF(pdfID):
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
 
-def doAllScans(ipTarget, htmlGDPR, timestamp, idPDF):
+def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, nmapIP, doZAP, zapURL):
    # perform nmap scan
 #    app.logger.error("NMAP")
-    out = nmapScan.nmapScan(ipTarget)
-    nameXML = "pdfs/" + str(idPDF) + ".xml"
-    nameHTML = "pdfs/" + str(idPDF) + ".html"
-    with open("pdfs/" + str(idPDF) + ".xml", "w") as file:
-        file.write(out)
 
-    process = subprocess.call(['xsltproc', nameXML, '-o', nameHTML ])
+    if doNMAP:
+        out = nmapScan.nmapScan(nmapIP)
+        nameXML = "pdfs/" + str(idPDF) + ".xml"
+        nameHTML = "pdfs/" + str(idPDF) + ".html"
+        with open("pdfs/" + str(idPDF) + ".xml", "w") as file:
+            file.write(out)
+        process = subprocess.call(['xsltproc', nameXML, '-o', nameHTML ])
     #app.logger.error("ZAP")
     # perform zap scan
-    htmlaScan =  zap.doScan(ipTarget, idPDF)
-    # build final pdf
+    nameAscan = ""
+    if doZAP:
+        htmlaScan =  zap.doScan(zapURL, idPDF)
+        if htmlaScan[0] == 1: # houve erro a produzir report
+            html ="""
+                <!DOCTYPE html>
+                <html>
+                    <body>
+                        <h3>ERROR performing OWASP ZAP SCAN</h3>
+                        <h3>ERROR: """ + htmlaScan[1] + """ </h3>
+                    </body>
+                </html>
+            """   
+            nameAscan = "pdfs/" + str(idPDF) + "-aScan.html"
+            with open(nameAscan, "w") as file:
+                file.write(html)
+        else: # nao falhou
+            nameAscan = htmlaScan[1]
+
+    
     nameHTMLGDPR = "pdfs/" + str(idPDF) + "-gdpr.html"
     with open(nameHTMLGDPR, "w") as file:
         file.write(htmlGDPR)
-
-    reportName = "/usr/src/app/pdfs/report-" + str(idPDF) + ".pdf"
     
-    pdfkit.from_file([nameHTMLGDPR, nameHTML, htmlaScan], reportName)  
+    # build final pdf
+    reportName = "/usr/src/app/pdfs/report-" + str(idPDF) + ".pdf"
+    if doNMAP and doZAP:
+        pdfkit.from_file([nameHTMLGDPR, nameHTML, htmlaScan], reportName) 
+    elif doNMAP:
+        pdfkit.from_file([nameHTMLGDPR, htmlaScan], reportName)
+    elif doNMAP:
+        pdfkit.from_file([nameHTMLGDPR, nameHTML], reportName)
+    else:
+        pdfkit.from_file([nameHTMLGDPR], reportName)
     #x = pdfkit.from_file([nameHTMLGDPR, nameHTML], reportName)  
     
     #pdf = PdfReader(reportName)

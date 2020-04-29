@@ -1,0 +1,21 @@
+<h1 mat-dialog-title>Security assessment Information </h1>
+<div mat-dialog-content>
+	<mat-checkbox [(ngModel)]="data.doNMAP">Perform NMAP scan?</mat-checkbox>
+	<div *ngIf="data.doNMAP">
+		<mat-form-field>
+			<mat-label>IP address for NMAP</mat-label>
+			<input matInput [(ngModel)]="data.NMAPip">
+		</mat-form-field>
+	</div>
+	<mat-checkbox [(ngModel)]="data.doZAP">Perform ZAP and cookies scan?</mat-checkbox>
+	<div *ngIf="data.doZAP">
+		<mat-form-field>
+			<mat-label>WEB app address for ZAP and cookies</mat-label>
+			<input matInput [(ngModel)]="data.ZAPurl">
+		</mat-form-field>
+	</div>
+</div>
+<div mat-dialog-actions>
+	<button mat-button  (click)="onNoClick()">Cancel</button>
+	<button mat-button [mat-dialog-close]="data" cdkFocusInitial>Submit data</button>
+</div>

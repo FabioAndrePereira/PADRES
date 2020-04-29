@@ -5,6 +5,16 @@ import {Principle} from './principle';
 import {FormArray, FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
 import {Router} from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import {ModalconfimComponent} from './modalconfim/modalconfim.component';
+import {MatDialog} from '@angular/material';
+import {Dialog} from 'primeng/dialog';
+
+
+export interface DialogData {
+	doNMAP: boolean;
+	NMAPaddress: string;
+	ZAPURL: string;
+}
 
 @Component({
     selector: 'app-rules',
@@ -34,7 +44,13 @@ export class PrinciplesComponent implements OnInit {
     selectedCountry: number;
     selectedSW: number;
 
-    constructor(private principleService: PrincipleService, private fb: FormBuilder, private router: Router,  private toastr: ToastrService) {
+    constructor(
+    	private principleService: PrincipleService,
+		private fb: FormBuilder,
+		private router: Router,
+		private toastr: ToastrService,
+		private modalDialog: MatDialog
+	) {
         this.createForm();
     }
 
@@ -112,7 +128,6 @@ export class PrinciplesComponent implements OnInit {
     }
 
     createForm() {
-
         this.formP = this.fb.group({
             country: [Validators.required],
             sw: [Validators.required],
@@ -147,19 +162,34 @@ export class PrinciplesComponent implements OnInit {
 
     submitData() {
         const formD = this.formP.value;
-        this.principleService.postDataForm(formD, this.selectedSW, this.selectedCountry).subscribe(
-            data => {
-				this.toastr.success('Data sent successfully');
-            },
-            error1 => {
-                console.log(error1);
-				this.toastr.error('Error sending data' + error1.message);
-            },
-            () => {
-                this.formP.reset();
-                this.router.navigate(['gdpr/history']);
-            }
-        );
+        let doNMAP = false;
+        let doZAP = false;
+        let NMAPip = '';
+        let ZAPurl = '';
+		const dialogRef = this.modalDialog.open(ModalconfimComponent, {
+			width: '20%',
+			data: { doNMAP: doNMAP, NMAPip: NMAPip, ZAPurl: ZAPurl, doZAP: doZAP}
+		});
+		dialogRef.afterClosed().subscribe(result => {
+			if ( result == undefined )
+				console.log("result");
+			else {
+				console.log(result)
+				this.principleService.postDataForm(formD, this.selectedSW, this.selectedCountry, result).subscribe(
+					data => {
+						this.toastr.success('Data sent successfully');
+					},
+					error1 => {
+						console.log(error1);
+						this.toastr.error('Error sending data' + error1.message);
+					},
+					() => {
+						this.formP.reset();
+						this.router.navigate(['gdpr/history']);
+					}
+				);
+			}
+		});
     }
 
     managePrin() {
@@ -202,4 +232,10 @@ export interface iCountry {
     id: number;
     name: string;
     abvr: string;
+}
+
+export interface modalConfirmData {
+	ipAdress: string;
+	webAppURL: string;
+	doNmap: boolean;
 }

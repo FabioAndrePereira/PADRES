@@ -11,9 +11,9 @@ indent_size=2
 
 [{*.cjsx,*.coffee}]
 indent_style=tab
-indent_size=2
+indent_size=4
 
 [{.analysis_options,*.yml,*.yaml}]
 indent_style=tab
-indent_size=2
+indent_size=4
 
