@@ -7,11 +7,14 @@ def doScan(target, id):
     try:
         #zap = ZAPv2(proxies={'http': 'http://127.0.0.1:8090', 'https': 'http://127.0.0.1:8090'})
         zap = ZAPv2(proxies={'http': 'http://172.19.0.3:8090', 'https': 'http://172.19.0.3:8090'})
-        
-        # The scan returns a scan id to support concurrent scanning
-        #target = 'https://public-firing-range.appspot.com'
+                
+        #clear previous scans
+        zap.spider.remove_all_scans()
+        zap.ascan.remove_all_scans()
+        zap.core.delete_site_node(target)
+
         print('Spidering target {}'.format(target))
-        
+
         # spider scan
         scanID = zap.spider.scan(target) 
         while int(zap.spider.status(scanID)) < 100:

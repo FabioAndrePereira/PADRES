@@ -1,24 +1,26 @@
+#flask
 import sqlite3 as sql3
 from flask import Flask, abort, request, send_file
 from flask_cors import CORS
-import jsonParser as jsonParser
-import pdfGenerator as pdfGen
+#aux lib
 import conDB as conDB
-import buildPDF
-import pdfkit
-import redis
 import nmapScan
-import subprocess 
+import wp
 import zap
-#from bgTask import doAllScans
+import jsonParser
+import buildPDF
+#main lib
+import os
+import subprocess 
+import atexit
+#ext lib
+import redis
+import pdfkit
 from rq import Worker, Queue, Connection
 from redis import Redis
 from rq.job import Job
-from pdfrw import PdfReader, PdfWriter
-import os
-import time
-import atexit
 from apscheduler.schedulers.background import BackgroundScheduler
+
 
 
 app = Flask(__name__)
@@ -39,7 +41,10 @@ def job_function():
                 pdfName = job.result[1] # full path
                 with open(pdfName, 'rb') as input_file:
                     ablob = input_file.read()
-                    va = conDB.insertPDF(i[0], ablob)
+                    conDB.insertPDF(i[0], pdfBLOB=ablob)
+            elif job.get_status() == "failed":
+                conDB.insertPDF(i[0], status=-1)
+
         else:
             continue
 
@@ -260,7 +265,7 @@ def postDataForm():
 @app.route("/results/<job_key>", methods=['GET'])
 def get_results(job_key):
     job = Job.fetch(job_key,connection=redis_conn)
-    return str(job.result), 200
+    return str(job.get_status()), 200
     
 
 @app.route('/getPDFs', methods=['GET'])
@@ -315,8 +320,9 @@ def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, nmapIP, doZAP, zapURL):
         with open("pdfs/" + str(idPDF) + ".xml", "w") as file:
             file.write(out)
         process = subprocess.call(['xsltproc', nameXML, '-o', nameHTML ])
-    #app.logger.error("ZAP")
-    # perform zap scan
+
+    
+    # perform zap scan and wapiti
     nameAscan = ""
     if doZAP:
         htmlaScan =  zap.doScan(zapURL, idPDF)
@@ -335,6 +341,9 @@ def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, nmapIP, doZAP, zapURL):
                 file.write(html)
         else: # nao falhou
             nameAscan = htmlaScan[1]
+        # do wapiti
+        nameWPscan = "pdfs/" + str(idPDF) + "-WPscan.html"
+        codeWP = wp.doWapiti(nameWPscan, zapURL)
 
     
     nameHTMLGDPR = "pdfs/" + str(idPDF) + "-gdpr.html"
@@ -344,42 +353,15 @@ def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, nmapIP, doZAP, zapURL):
     # build final pdf
     reportName = "/usr/src/app/pdfs/report-" + str(idPDF) + ".pdf"
     if doNMAP and doZAP:
-        pdfkit.from_file([nameHTMLGDPR, nameHTML, htmlaScan], reportName) 
-    elif doNMAP:
-        pdfkit.from_file([nameHTMLGDPR, htmlaScan], reportName)
+        pdfkit.from_file([nameHTMLGDPR, nameHTML, nameAscan, nameWPscan], reportName) 
+    elif doZAP and (codeWP == 1):
+        pdfkit.from_file([nameHTMLGDPR, nameAscan, nameWPscan], reportName)
     elif doNMAP:
         pdfkit.from_file([nameHTMLGDPR, nameHTML], reportName)
     else:
         pdfkit.from_file([nameHTMLGDPR], reportName)
-    #x = pdfkit.from_file([nameHTMLGDPR, nameHTML], reportName)  
-    
-    #pdf = PdfReader(reportName)
+
     return 1, reportName
-    #return x
-   #pdf = pdfkit.from_file(nameHTMLGDPR, False)  
-
-   
-  # val = conDB.insertPDF(idPDF, reportName)
-   #val = conDB.insertPDF(idPDF, nameHTMLGDPR)
-
-   # for file in os.listdir("pdfs/"):
-   #    if file == nameHTML.split("/")[1] or file == nameXML.split("/")[1] or file == nameHTMLGDPR.split("/")[1] or file == htmlaScan:
-   #          os.remove(file)
-   #app.logger.error("do scans " + str(pdf)) 
+  
    
     
-
-
-# # Instantiation of inherited class
-# pdf = PDF()
-# pdf.alias_nb_pages()
-# pdf.add_page()
-# pdf.set_font('Times', '', 12)
-# for i in range(1, 41):
-#     pdf.cell(0, 10, 'Printing line number ' + str(i), 0, 1)
-# pdf.output('report.pdf', 'F')
-
-# pdfObj = pdfGen.PDF(swName, nameCountry)
-        # pdfObj.add_page()
-        # pdfObj.parseData(content, swPath)
-        # pdfObj.output('report.pdf', 'F')

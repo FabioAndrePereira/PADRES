@@ -77,16 +77,19 @@ def getSelectedPDF(dbCon, pdfID):
 
     return data
 
-def insertPDF(idPDF, pdfBLOB): # faz update na tabela pdf depois de acabar o job
+def insertPDF(idPDF, pdfBLOB=b'', status=0): # faz update na tabela pdf depois de acabar o job
     conDB = None
     try:
-        dbCon = sql3.connect(PATH_DB)
-        queryInsert = 'UPDATE genPDFs SET pdfs = ?, status = 1 WHERE id = ?'
-        cur = dbCon.cursor()
         # http://www.numericalexpert.com/blog/sqlite_blob_time/
-        x = cur.execute(queryInsert, (sql3.Binary(pdfBLOB), idPDF))
+        dbCon = sql3.connect(PATH_DB)
+        cur = dbCon.cursor()
+        if status == -1:
+            queryInsert = 'UPDATE genPDFs SET status = -1 WHERE id = ?'
+            cur.execute(queryInsert, (idPDF))
+        else:
+            queryInsert = 'UPDATE genPDFs SET pdfs = ?, status = 1 WHERE id = ?'
+            cur.execute(queryInsert, (sql3.Binary(pdfBLOB), idPDF))
         dbCon.commit()
-        return x
     except Exception as e:
         raise e
         return "error"

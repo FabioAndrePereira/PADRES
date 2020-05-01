@@ -56,6 +56,7 @@ export class PrincipleService {
 		data["ZAPurl"] = opt.ZAPurl;
 		data["doZAP"] = opt.doZAP;
 		const dataJSON = JSON.stringify(data);
+		//console.log(dataJSON)
         return  this.http.post(baseURL + 'postDataForm', dataJSON, httpOptions2).pipe(
             catchError(err =>  throwError(err))
         )

@@ -11,3 +11,4 @@ redis==3.4.1
 Werkzeug==0.14.1
 pdfrw==0.4
 APScheduler==3.6.3
+wapiti3==3.0.3

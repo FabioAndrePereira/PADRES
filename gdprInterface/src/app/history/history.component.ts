@@ -13,7 +13,7 @@ export class HistoryComponent implements OnInit, OnDestroy {
 		private historyService: HistoryService,
 		private toastr: ToastrService) { }
 
-	displayedColumns: string[] = ['id', 'country', 'sw', 'name', 'timeStamp'];
+	displayedColumns: string[] = ['country', 'sw', 'name', 'timeStamp'];
 	pdfsData: History[] = [];
 	subSched: Subscription;
 	ngOnInit() {
@@ -41,7 +41,10 @@ export class HistoryComponent implements OnInit, OnDestroy {
 	}
 	displayPDF(row) {
 		if (row.status == 0){
-			this.toastr.info('PDF not available yet!');
+			this.toastr.info('Report not available yet!');
+		}
+		else if (row.status == -1){
+			this.toastr.error('There was a problem building the report');
 		}
 		else {
 			this.historyService.getPDF(row.id).subscribe(

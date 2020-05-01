@@ -167,14 +167,14 @@ export class PrinciplesComponent implements OnInit {
         let NMAPip = '';
         let ZAPurl = '';
 		const dialogRef = this.modalDialog.open(ModalconfimComponent, {
-			width: '20%',
+			width: '350px',
 			data: { doNMAP: doNMAP, NMAPip: NMAPip, ZAPurl: ZAPurl, doZAP: doZAP}
 		});
 		dialogRef.afterClosed().subscribe(result => {
-			if ( result == undefined )
+			if ( result == 0 )
 				console.log("result");
 			else {
-				console.log(result)
+				//console.log(result);
 				this.principleService.postDataForm(formD, this.selectedSW, this.selectedCountry, result).subscribe(
 					data => {
 						this.toastr.success('Data sent successfully');
