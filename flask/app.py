@@ -240,8 +240,8 @@ def postDataForm():
         con = conDB.newCon()
         idPDF = conDB.createPDFentry(con, str(content['country']), str(content['sw']), timestamp) # insere e retorna o id da inserção
         print("START JOB")
-        job = q.enqueue(doAllScans, args=(htmlGDPR, timestamp, idPDF, content["doNMAP"], str(content["NMAPip"]), 
-        content["doZAP"] ,str(content["ZAPurl"])), job_timeout=3600*5)
+        job = q.enqueue(doAllScans, args=(htmlGDPR, timestamp, idPDF, content["doNMAP"], 
+                        content["doZAP"] ,str(content["ZAPurl"])), job_timeout=3600*5)
         jobID = str(job.get_id())
         conDB.insertJobID(con, jobID, idPDF)
         response = app.response_class(
@@ -292,13 +292,13 @@ def getPDFs():
 def returnPDF(pdfID):
     reportName = "/usr/src/app/pdfs/report-" + str(pdfID) + ".pdf"
     if not os.path.exists(reportName):  
-        app.logger.error("buildpdf")
+        #app.logger.error("buildpdf")
         con = conDB.newCon()
         data = conDB.getSelectedPDF(con, pdfID).fetchone()
         with open(reportName, 'wb') as output_file:
             output_file.write(data)
     try:
-        app.logger.error(os.path.exists(reportName))
+        #app.logger.error(os.path.exists(reportName))
         return send_file(reportName, attachment_filename='report-' + str(pdfID) + '.pdf')
     except Exception as e:
 	    return str(e)
@@ -307,26 +307,39 @@ def returnPDF(pdfID):
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
 
-def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, nmapIP, doZAP, zapURL):
+def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, doZAP, zapURL):
     html ="""
         <!DOCTYPE html>
         <html>
+            <head>
+                <style>
+                    table, th{
+                        border: 1px solid black;
+                    }
+                    th, td {
+                        padding: 10px;
+                    }
+                    th{
+                        background:#6CA4EC;
+                    }
+                </style>
+            </head>
             <body>   
         """
     # adicionar coookies
     import cookieS
-    cookieOld, cookieN = cookieS.get_cookies()
+    cookieOld, cookieN = cookieS.get_cookies(zapURL)
     if len(cookieOld) != 0:
         print("addind cookies")
-        html += """<h5><font color=\"black\"> Cookies before consent </font></h5>"""
+        html += """<h3><font color=\"black\"> Cookies before consent </font></h3>"""
         html += """
         <table style="width:100%">
             <tr>
             <th>Name</th>
             <th>Domain</th>
             <th>Expiration</th>
-            <td>httpOnly</td>
-            <td>Value</td>
+            <th>httpOnly</th>
+            <th>Value</th>
             </tr>
         """
         for c in cookieOld:
@@ -339,17 +352,19 @@ def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, nmapIP, doZAP, zapURL):
                     <td>""" + str(c['value'])    + """</td>
                 </tr>
                 """
-        html += "</table>" 
+        html += "</table>"
+    else:
+        html += """<h3><font color=\"black\"> No Cookies Retrived </font></h3>"""
     if len(cookieN) != 0:
-        html += """<h5><font color=\"black\"> Cookies added after consent </font></h5>"""
+        html += """<h3><font color=\"black\"> Cookies added after consent </font></h3>"""
         html += """
         <table style="width:100%">
             <tr>
             <th>Name</th>
             <th>Domain</th>
             <th>Expiration</th>
-            <td>httpOnly</td>
-            <td>Value</td>
+            <th>httpOnly</th>
+            <th>Value</th>
             </tr>
         """
         for c in cookieN:
@@ -363,8 +378,8 @@ def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, nmapIP, doZAP, zapURL):
             </tr>
             """
         html += "</table>" 
-    else:
-        html += """<h5><font color=\"black\"> Was not possible to retrive cookies </font></h5>"""
+    elif len(cookieOld) != 0:
+        html += """<h3><font color=\"black\"> Was not possible to retrive cookies after consent </font></h3>"""
     html += """
             </body>
         </html>
@@ -374,6 +389,8 @@ def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, nmapIP, doZAP, zapURL):
         file.write(html)
 
     if doNMAP:
+        nmapIP = zapURL.split('//')[1].split('/')[0]
+        app.logger.info("NMAP")
         out = nmapScan.nmapScan(nmapIP)
         nameXML = "pdfs/" + str(idPDF) + ".xml"
         nameHTML = "pdfs/" + str(idPDF) + ".html"
@@ -385,6 +402,7 @@ def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, nmapIP, doZAP, zapURL):
     # perform zap scan and wapiti
     nameAscan = ""
     if doZAP:
+        app.logger.info("ZAP")
         htmlaScan =  zap.doScan(zapURL, idPDF)
         if htmlaScan[0] == 1: # houve erro a produzir report
             html ="""
@@ -402,6 +420,7 @@ def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, nmapIP, doZAP, zapURL):
         else: # nao falhou
             nameAscan = htmlaScan[1]
         # do wapiti
+        app.logger.info("WAPITI")
         nameWPscan = "pdfs/" + str(idPDF) + "-WPscan.html"
         codeWP = wp.doWapiti(nameWPscan, zapURL)
 
@@ -411,6 +430,7 @@ def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, nmapIP, doZAP, zapURL):
         file.write(htmlGDPR)
     
     # build final pdf
+    app.logger.info("FINAl PDF")
     reportName = "/usr/src/app/pdfs/report-" + str(idPDF) + ".pdf"
     if doNMAP and doZAP:
         pdfkit.from_file([nameHTMLGDPR, nameCookie_Scan, nameHTML, nameAscan, nameWPscan], reportName) 

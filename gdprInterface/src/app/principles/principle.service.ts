@@ -52,7 +52,6 @@ export class PrincipleService {
             observe: 'response' as 'response'
         };
         data["doNMAP"] = opt.doNMAP;
-		data["NMAPip"] = opt.NMAPip;
 		data["ZAPurl"] = opt.ZAPurl;
 		data["doZAP"] = opt.doZAP;
 		const dataJSON = JSON.stringify(data);

@@ -1,16 +1,10 @@
 <h1 mat-dialog-title>Security assessment Indozapation </h1>
 <div mat-dialog-content>
 	<mat-checkbox [(ngModel)]="data.doNMAP" >Perform NMAP scan?</mat-checkbox>
-	<div *ngIf="data.doNMAP">
-		<mat-form-field>
-			<mat-label>IP address for NMAP</mat-label>
-			<input matInput [(ngModel)]="data.NMAPip">
-		</mat-form-field>
-	</div>
 	<mat-checkbox [(ngModel)]="data.doZAP" (change)="changeForm()">Perform ZAP and cookies scan? </mat-checkbox>
-	<div *ngIf="data.doZAP">
+	<div *ngIf="data.doZAP || data.doNMAP">
 		<mat-form-field>
-			<mat-label>WEB app address for ZAP </mat-label>
+			<mat-label>WEB app address for ZAP and NMAP </mat-label>
 			<input matInput [(ngModel)]="data.ZAPurl" [formControl]="dozap" >
 			<span class="text-danger" *ngIf="dozap.hasError('required')
 				&& (dozap.dirty || dozap.touched)">This field is required</span>
