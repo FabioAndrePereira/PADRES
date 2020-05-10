@@ -218,10 +218,10 @@ def postDataForm():
         for i in data:
             nameCountry = i[0]
 
-        queryPATH = 'SELECT pathfiles FROM softwareCountry where softwareID = ? and countryID = ?;'
-        data = cursor.execute(queryPATH, (str(content['sw']), str(content['country'])))
-        for i in data:
-            swPath = i[0]
+        # queryPATH = 'SELECT pathfiles FROM softwareCountry where softwareID = ? and countryID = ?;'
+        # data = cursor.execute(queryPATH, (str(content['sw']), str(content['country'])))
+        # for i in data:
+        #     swPath = i[0]
     except Exception as e:
         abort(500, {'message': e})
     finally:
@@ -239,11 +239,9 @@ def postDataForm():
         # start security scans in bg
         con = conDB.newCon()
         idPDF = conDB.createPDFentry(con, str(content['country']), str(content['sw']), timestamp) # insere e retorna o id da inserção
-        app.logger.error("aqui crl 0")
         print("START JOB")
-        app.logger.error("aqui crl 1")
         job = q.enqueue(doAllScans, args=(htmlGDPR, timestamp, idPDF, content["doNMAP"], str(content["NMAPip"]), 
-        content["doZAP"] ,str(content["ZAPurl"])), job_timeout=3600)
+        content["doZAP"] ,str(content["ZAPurl"])), job_timeout=3600*5)
         jobID = str(job.get_id())
         conDB.insertJobID(con, jobID, idPDF)
         response = app.response_class(
@@ -310,8 +308,70 @@ if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
 
 def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, nmapIP, doZAP, zapURL):
-   # perform nmap scan
-#    app.logger.error("NMAP")
+    html ="""
+        <!DOCTYPE html>
+        <html>
+            <body>   
+        """
+    # adicionar coookies
+    import cookieS
+    cookieOld, cookieN = cookieS.get_cookies()
+    if len(cookieOld) != 0:
+        print("addind cookies")
+        html += """<h5><font color=\"black\"> Cookies before consent </font></h5>"""
+        html += """
+        <table style="width:100%">
+            <tr>
+            <th>Name</th>
+            <th>Domain</th>
+            <th>Expiration</th>
+            <td>httpOnly</td>
+            <td>Value</td>
+            </tr>
+        """
+        for c in cookieOld:
+            html += """
+                <tr>
+                    <td>""" + str(c['name'])     + """</td>
+                    <td>""" + str(c['domain'])   + """</td>
+                    <td>""" + str(c['expiry'])   + """</td>
+                    <td>""" + str(c['httpOnly']) + """</td>
+                    <td>""" + str(c['value'])    + """</td>
+                </tr>
+                """
+        html += "</table>" 
+    if len(cookieN) != 0:
+        html += """<h5><font color=\"black\"> Cookies added after consent </font></h5>"""
+        html += """
+        <table style="width:100%">
+            <tr>
+            <th>Name</th>
+            <th>Domain</th>
+            <th>Expiration</th>
+            <td>httpOnly</td>
+            <td>Value</td>
+            </tr>
+        """
+        for c in cookieN:
+            html += """
+            <tr>
+                <td>""" + str(c['name'])     + """</td>
+                <td>""" + str(c['domain'])   + """</td>
+                <td>""" + str(c['expiry'])   + """</td>
+                <td>""" + str(c['httpOnly']) + """</td>
+                <td>""" + str(c['value'])    + """</td>
+            </tr>
+            """
+        html += "</table>" 
+    else:
+        html += """<h5><font color=\"black\"> Was not possible to retrive cookies </font></h5>"""
+    html += """
+            </body>
+        </html>
+    """ 
+    nameCookie_Scan = "pdfs/" + str(idPDF) + "-cookieScan.html"
+    with open(nameCookie_Scan, "w") as file:
+        file.write(html)
 
     if doNMAP:
         out = nmapScan.nmapScan(nmapIP)
@@ -353,13 +413,15 @@ def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, nmapIP, doZAP, zapURL):
     # build final pdf
     reportName = "/usr/src/app/pdfs/report-" + str(idPDF) + ".pdf"
     if doNMAP and doZAP:
-        pdfkit.from_file([nameHTMLGDPR, nameHTML, nameAscan, nameWPscan], reportName) 
+        pdfkit.from_file([nameHTMLGDPR, nameCookie_Scan, nameHTML, nameAscan, nameWPscan], reportName) 
     elif doZAP and (codeWP == 1):
-        pdfkit.from_file([nameHTMLGDPR, nameAscan, nameWPscan], reportName)
+        pdfkit.from_file([nameHTMLGDPR, nameCookie_Scan, nameAscan, nameWPscan], reportName)
     elif doNMAP:
-        pdfkit.from_file([nameHTMLGDPR, nameHTML], reportName)
+        pdfkit.from_file([nameHTMLGDPR, nameCookie_Scan, nameHTML], reportName)
     else:
-        pdfkit.from_file([nameHTMLGDPR], reportName)
+        #app.logger.error("build pdf")
+        pdfkit.from_file([nameHTMLGDPR, nameCookie_Scan], reportName)
+    
 
     return 1, reportName
   

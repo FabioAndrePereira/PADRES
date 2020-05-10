@@ -37,6 +37,14 @@ def getPrincipleHname(dbCon, phID):
 
     return data
 
+def getSuggestion(dbCon, defID):
+    cursor = dbCon.cursor()
+    querysug = 'SELECT * FROM suggestions ' \
+                            'WHERE principleID = ?;'
+    data = cursor.execute(querysug, (defID,))
+
+    return data
+
 def createPDFentry(dbCon, countryID, swID, timestamp, status=0):
     # with open(timestamp + ".html", "w") as file:
     #     file.write(pdfs)
@@ -85,10 +93,10 @@ def insertPDF(idPDF, pdfBLOB=b'', status=0): # faz update na tabela pdf depois d
         cur = dbCon.cursor()
         if status == -1:
             queryInsert = 'UPDATE genPDFs SET status = -1 WHERE id = ?'
-            cur.execute(queryInsert, (idPDF))
+            cur.execute(queryInsert, (idPDF,))
         else:
             queryInsert = 'UPDATE genPDFs SET pdfs = ?, status = 1 WHERE id = ?'
-            cur.execute(queryInsert, (sql3.Binary(pdfBLOB), idPDF))
+            cur.execute(queryInsert, (sql3.Binary(pdfBLOB), idPDF,))
         dbCon.commit()
     except Exception as e:
         raise e

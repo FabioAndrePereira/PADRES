@@ -119,7 +119,7 @@ export class PrinciplesComponent implements OnInit {
                         });
                     },
                     error1 => {
-                        console.log(error1.err.message);
+                        console.log(error1);
                     }
                 );
             }

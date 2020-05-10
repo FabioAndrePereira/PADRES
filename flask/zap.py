@@ -5,7 +5,7 @@ import json
 
 def doScan(target, id):
     try:
-        #zap = ZAPv2(proxies={'http': 'http://127.0.0.1:8090', 'https': 'http://127.0.0.1:8090'})
+        # zap = ZAPv2(proxies={'http': 'http://127.0.0.1:8090', 'https': 'http://127.0.0.1:8090'})
         zap = ZAPv2(proxies={'http': 'http://172.19.0.3:8090', 'https': 'http://172.19.0.3:8090'})
                 
         #clear previous scans
@@ -20,8 +20,8 @@ def doScan(target, id):
         while int(zap.spider.status(scanID)) < 100:
             time.sleep(2)
 
-        # # spider ajax scan
-        zap.ajaxSpider.set_option_max_duration(2)
+        # ajax scan
+        zap.ajaxSpider.set_option_max_duration(5)
         print(zap.ajaxSpider.option_max_duration)
         scanIDajax = zap.ajaxSpider.scan(target) 
         while zap.ajaxSpider.status == 'running':
@@ -33,10 +33,8 @@ def doScan(target, id):
             time.sleep(2)
 
         print('Passive Scan completed')
-
-        
-        zap.ascan.disable_all_scanners()
-        #zap.ascan.enable_scanners(40018,4)
+        #zap.ascan.disable_all_scanners()
+        #zap.ascan.enable_scanners(40018,40012)
         scanID = zap.ascan.scan(target)
         while int(zap.ascan.status(scanID)) < 100:
             # Loop until the scanner has finished

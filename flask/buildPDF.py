@@ -4,6 +4,7 @@ import os
 import shutil
 from datetime import datetime
 from PyPDF2 import PdfFileReader
+import cookieS
 
 def buildPDF(data, swName, nameCountry):
     html ="""
@@ -55,12 +56,30 @@ def buildPDF(data, swName, nameCountry):
             html += "<ul>"
             for i in range(0, len(not_inCompliance)):
                 html += """<li><font color=\"black\"> """ + not_inCompliance[i]["ruleDef"] + "</li>"
-                html += "<h5><font color=\"black\"> Suggestions to be in compliance </font></h5>"
-                html += """
-                        <ul>
-                            <li><font color=\"black\">TODO</font></li>
-                        </ul>
-                        """
+                idDEF = not_inCompliance[i]["ruleID"]
+                con = None
+                try: 
+                    con = conDB.newCon()
+                    res = conDB.getSuggestion(con, idDEF).fetchall()
+                    
+                    if len(res) == 0:
+                        html += "<h5><font color=\"black\"> No suggestions available </font></h5>"
+                    else:
+                        html += "<h5><font color=\"black\"> Suggestions to be in compliance </font></h5>"
+                        html += "<ul>"
+                        for k in res:
+                            """<li><font color=\"black\"> """ + k[1] + "</li>"
+                        html += "</ul>"
+
+                except Exception as e:
+                    raise
+                finally:
+                    if con is not None:
+                        try:
+                            con.close()
+                            print("con closed {}".format(con))
+                        except Exception as e:
+                            print("Error closing con {}".format(e))   
             html += "</ul>"       
         else:
             html +=  "No principles defined" 
