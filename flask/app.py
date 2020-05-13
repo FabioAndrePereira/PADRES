@@ -308,42 +308,68 @@ if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
 
 def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, doZAP, zapURL):
-    html ="""
-        <!DOCTYPE html>
-        <html>
-            <head>
-                <style>
-                    table, th{
-                        border: 1px solid black;
-                    }
-                    th, td {
-                        padding: 10px;
-                    }
-                    th{
-                        background:#6CA4EC;
-                    }
-                </style>
-            </head>
-            <body>   
-        """
-    # adicionar coookies
-    import cookieS
-    cookieOld, cookieN = cookieS.get_cookies(zapURL)
-    if len(cookieOld) != 0:
-        print("addind cookies")
-        html += """<h3><font color=\"black\"> Cookies before consent </font></h3>"""
-        html += """
-        <table style="width:100%">
-            <tr>
-            <th>Name</th>
-            <th>Domain</th>
-            <th>Expiration</th>
-            <th>httpOnly</th>
-            <th>Value</th>
-            </tr>
-        """
-        for c in cookieOld:
+    if doZAP:
+        html ="""
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <style>
+                        table, th{
+                            border: 1px solid black;
+                        }
+                        th, td {
+                            padding: 10px;
+                        }
+                        th{
+                            background:#6CA4EC;
+                        }
+                    </style>
+                </head>
+                <body>   
+            """
+        # adicionar coookies
+        import cookieS
+        cookieOld, cookieN = cookieS.get_cookies(zapURL)
+        if len(cookieOld) != 0:
+            print("addind cookies")
+            html += """<h3><font color=\"black\"> Cookies before consent </font></h3>"""
             html += """
+            <table style="width:100%">
+                <tr>
+                <th>Name</th>
+                <th>Domain</th>
+                <th>Expiration</th>
+                <th>httpOnly</th>
+                <th>Value</th>
+                </tr>
+            """
+            for c in cookieOld:
+                html += """
+                    <tr>
+                        <td>""" + str(c['name'])     + """</td>
+                        <td>""" + str(c['domain'])   + """</td>
+                        <td>""" + str(c['expiry'])   + """</td>
+                        <td>""" + str(c['httpOnly']) + """</td>
+                        <td>""" + str(c['value'])    + """</td>
+                    </tr>
+                    """
+            html += "</table>"
+        else:
+            html += """<h3><font color=\"black\"> No Cookies Retrived </font></h3>"""
+        if len(cookieN) != 0:
+            html += """<h3><font color=\"black\"> Cookies added after consent </font></h3>"""
+            html += """
+            <table style="width:100%">
+                <tr>
+                <th>Name</th>
+                <th>Domain</th>
+                <th>Expiration</th>
+                <th>httpOnly</th>
+                <th>Value</th>
+                </tr>
+            """
+            for c in cookieN:
+                html += """
                 <tr>
                     <td>""" + str(c['name'])     + """</td>
                     <td>""" + str(c['domain'])   + """</td>
@@ -352,38 +378,13 @@ def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, doZAP, zapURL):
                     <td>""" + str(c['value'])    + """</td>
                 </tr>
                 """
-        html += "</table>"
-    else:
-        html += """<h3><font color=\"black\"> No Cookies Retrived </font></h3>"""
-    if len(cookieN) != 0:
-        html += """<h3><font color=\"black\"> Cookies added after consent </font></h3>"""
+            html += "</table>" 
+        elif len(cookieOld) != 0:
+            html += """<h3><font color=\"black\"> Was not possible to retrive cookies after consent </font></h3>"""
         html += """
-        <table style="width:100%">
-            <tr>
-            <th>Name</th>
-            <th>Domain</th>
-            <th>Expiration</th>
-            <th>httpOnly</th>
-            <th>Value</th>
-            </tr>
-        """
-        for c in cookieN:
-            html += """
-            <tr>
-                <td>""" + str(c['name'])     + """</td>
-                <td>""" + str(c['domain'])   + """</td>
-                <td>""" + str(c['expiry'])   + """</td>
-                <td>""" + str(c['httpOnly']) + """</td>
-                <td>""" + str(c['value'])    + """</td>
-            </tr>
-            """
-        html += "</table>" 
-    elif len(cookieOld) != 0:
-        html += """<h3><font color=\"black\"> Was not possible to retrive cookies after consent </font></h3>"""
-    html += """
-            </body>
-        </html>
-    """ 
+                </body>
+            </html>
+        """ 
     nameCookie_Scan = "pdfs/" + str(idPDF) + "-cookieScan.html"
     with open(nameCookie_Scan, "w") as file:
         file.write(html)
@@ -440,7 +441,7 @@ def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, doZAP, zapURL):
         pdfkit.from_file([nameHTMLGDPR, nameCookie_Scan, nameHTML], reportName)
     else:
         #app.logger.error("build pdf")
-        pdfkit.from_file([nameHTMLGDPR, nameCookie_Scan], reportName)
+        pdfkit.from_file([nameHTMLGDPR], reportName)
     
 
     return 1, reportName
