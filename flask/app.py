@@ -19,6 +19,7 @@ import pdfkit
 from rq import Worker, Queue, Connection
 from redis import Redis
 from rq.job import Job
+from rq.registry import FailedJobRegistry, ScheduledJobRegistry
 from apscheduler.schedulers.background import BackgroundScheduler
 
 
@@ -27,6 +28,17 @@ app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 redis_conn = Redis(host='redis', port=6379)
 q = Queue(connection=redis_conn)
+
+
+failed_registry = FailedJobRegistry(queue=q)
+for job_id in failed_registry.get_job_ids():
+    app.logger.error("fal del-> " + str(job_id))
+    failed_registry.remove(job_id, delete_job=True)
+
+# sch_registry = ScheduledJobRegistry(queue=q)
+# for job_id in sch_registry.get_job_ids():
+#     app.logger.error("sch del-> " + str(job_id))
+#     sch_registry.remove(job_id, delete_job=True)
 
 def job_function():
     con = conDB.newCon()
@@ -239,7 +251,7 @@ def postDataForm():
         # start security scans in bg
         con = conDB.newCon()
         idPDF = conDB.createPDFentry(con, str(content['country']), str(content['sw']), timestamp) # insere e retorna o id da inserção
-        print("START JOB")
+        app.logger.info("start job")
         job = q.enqueue(doAllScans, args=(htmlGDPR, timestamp, idPDF, content["doNMAP"], 
                         content["doZAP"] ,str(content["ZAPurl"])), job_timeout=3600*5)
         jobID = str(job.get_id())
@@ -264,8 +276,17 @@ def postDataForm():
 def get_results(job_key):
     job = Job.fetch(job_key,connection=redis_conn)
     return str(job.get_status()), 200
-    
 
+@app.route("/allJobsQueue", methods=['GET'])
+def get_allJQ():
+    sch_registry = ScheduledJobRegistry(queue=q)
+    return str(sch_registry)
+
+@app.route("/allJobsFailed", methods=['GET'])
+def get_allJF():
+    failed_registry = FailedJobRegistry(queue=q)        
+    return str(failed_registry)
+    
 @app.route('/getPDFs', methods=['GET'])
 def getPDFs():
     con = None
@@ -385,19 +406,22 @@ def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, doZAP, zapURL):
                 </body>
             </html>
         """ 
-    nameCookie_Scan = "pdfs/" + str(idPDF) + "-cookieScan.html"
-    with open(nameCookie_Scan, "w") as file:
-        file.write(html)
+        nameCookie_Scan = "pdfs/" + str(idPDF) + "-cookieScan.html"
+        with open(nameCookie_Scan, "w") as file:
+            file.write(html)
 
     if doNMAP:
         nmapIP = zapURL.split('//')[1].split('/')[0]
+        if ':' in nmapIP:
+            nmapIP = nmapIP.split(':')[0]
         app.logger.info("NMAP")
-        out = nmapScan.nmapScan(nmapIP)
-        nameXML = "pdfs/" + str(idPDF) + ".xml"
+        app.logger.error(nmapIP)
+        nmapScan.nmapScan(nmapIP, 'pdfs/' + str(idPDF) + '.xml', 'pdfs/' + str(idPDF) + '.html')
+        # nameXML = "pdfs/" + str(idPDF) + ".xml"
         nameHTML = "pdfs/" + str(idPDF) + ".html"
-        with open("pdfs/" + str(idPDF) + ".xml", "w") as file:
-            file.write(out)
-        process = subprocess.call(['xsltproc', nameXML, '-o', nameHTML ])
+        # with open("pdfs/" + str(idPDF) + ".xml", "w") as file:
+        #     file.write(out)
+        # process = subprocess.call(['xsltproc', nameXML, '-o', nameHTML ])
 
     
     # perform zap scan and wapiti
@@ -438,7 +462,7 @@ def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, doZAP, zapURL):
     elif doZAP and (codeWP == 1):
         pdfkit.from_file([nameHTMLGDPR, nameCookie_Scan, nameAscan, nameWPscan], reportName)
     elif doNMAP:
-        pdfkit.from_file([nameHTMLGDPR, nameCookie_Scan, nameHTML], reportName)
+        pdfkit.from_file([nameHTMLGDPR, nameHTML], reportName)
     else:
         #app.logger.error("build pdf")
         pdfkit.from_file([nameHTMLGDPR], reportName)

@@ -3,7 +3,7 @@ import shlex
 import os
 
 def doWapiti(nameWP, target):
-    command = "wapiti -u" + target  + " -m sql,blindsql,xss,permanentxss --flush-session -f html  -o ./pdfs"
+    command = "wapiti -u " + target  + " --flush-session --max-scan-time 60 -f html  -o ./pdfs"
     args = shlex.split(command)
     sp = subprocess.Popen(args, stdout=subprocess.PIPE)
     out = sp.communicate()

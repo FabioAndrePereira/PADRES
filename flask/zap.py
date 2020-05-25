@@ -21,7 +21,7 @@ def doScan(target, id):
             time.sleep(2)
 
         # ajax scan
-        zap.ajaxSpider.set_option_max_duration(5)
+        zap.ajaxSpider.set_option_max_duration(10)
         print(zap.ajaxSpider.option_max_duration)
         scanIDajax = zap.ajaxSpider.scan(target) 
         while zap.ajaxSpider.status == 'running':
@@ -33,7 +33,16 @@ def doScan(target, id):
             time.sleep(2)
 
         print('Passive Scan completed')
+        scanners = [40012, 40014, 40018, 40016, 40017, 90018, 40026, 6, 7, 10045, 40009, 
+        90019, 90020, 0, 20019, 30001, 30002, 40003, 40008, 50000]
+        #zap.ascan.set_option_default_policy(scanpolicyname='St-High-Th-Low')
         #zap.ascan.disable_all_scanners()
+        zap.ascan.enable_all_scanners()
+        for sc in scanners:
+            zap.ascan.set_scanner_alert_threshold(sc, 'Low')
+            zap.ascan.set_scanner_attack_strength(sc, 'High')
+        zap.ascan.set_option_max_rule_duration_in_mins(5)
+        zap.ascan.set_option_max_scan_duration_in_mins(120)
         #zap.ascan.enable_scanners(40018,40012)
         scanID = zap.ascan.scan(target)
         while int(zap.ascan.status(scanID)) < 100:

@@ -45,6 +45,5 @@ def get_cookies(target):
                     j["expiry"] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(j["expiry"]))
                     cookiesAdded.append(j)
         except Exception as e:
-            pass
-
+            pass        
     return cookiesOLD, cookiesAdded

@@ -14,6 +14,8 @@ def buildPDF(data, swName, nameCountry):
                 <h1>GDPR report for """ + swName + """ following the """ + nameCountry  + """\'s specific rules</h1>     
         """
     principlesOUT = data["principle"]
+    allRules = 0
+    allNotComplianceRules = 0
     for pID in range(0, 8): # 8 = numero de principios definidos
         principleHid = principlesOUT[pID]["pID"]
         principleHname = ''
@@ -36,6 +38,7 @@ def buildPDF(data, swName, nameCountry):
         html += "<h2>" + principleHname + "</h2>"
         
         rules = principlesOUT[pID]["rules"]
+        
         #organize rules into comply or not
         inCompliance = []
         not_inCompliance = []
@@ -44,6 +47,9 @@ def buildPDF(data, swName, nameCountry):
                 inCompliance.append(rules[i])
             else:
                 not_inCompliance.append(rules[i])
+        if pID != 7:
+            allRules = allRules +  len(rules)
+            allNotComplianceRules = allNotComplianceRules + len(not_inCompliance)
         #display rules
         if (len(rules)) > 0:
             html += "<h3><font color=\"green\"> In compliance with: </h2>"
@@ -83,6 +89,8 @@ def buildPDF(data, swName, nameCountry):
             html += "</ul>"       
         else:
             html +=  "No principles defined" 
+
+    html += "<h3>The software " + swName + "does not comply with " + str(allNotComplianceRules) + " rules from a total of " + str(allRules) + "</h3>"
 
     html += """
             </body>
