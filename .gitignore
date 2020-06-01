@@ -7,3 +7,5 @@ flask/lib64
 flask/pyvenv.cfg
 flask/flaskGDPR
 flask/*.pyc
+flask/chromedriver
+flask/pdfs/*

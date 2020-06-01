@@ -8,7 +8,7 @@ services:
         ipv4_address: 172.19.0.3
     ports:
       - 8090:8090
-    command:  zap.sh -daemon -port 8090 -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true -config api.disablekey=true -host 0.0.0.0
+    command:  zap.sh -daemon -port 8090 -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true -config api.disablekey=true -host 0.0.0.0 -addoninstall domxss -addoninstall sqliplugin -quickprogress -addonupdate
   flaskgdpr:
     build: ./flask # dir do projeto
     image: flaskgdpr

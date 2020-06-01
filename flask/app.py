@@ -377,6 +377,7 @@ def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, doZAP, zapURL):
             html += "</table>"
         else:
             html += """<h3><font color=\"black\"> No Cookies Retrived </font></h3>"""
+        app.logger.error(cookieN)
         if len(cookieN) != 0:
             html += """<h3><font color=\"black\"> Cookies added after consent </font></h3>"""
             html += """
