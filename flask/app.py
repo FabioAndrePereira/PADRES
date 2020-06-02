@@ -35,10 +35,10 @@ for job_id in failed_registry.get_job_ids():
     app.logger.error("fal del-> " + str(job_id))
     failed_registry.remove(job_id, delete_job=True)
 
-# sch_registry = ScheduledJobRegistry(queue=q)
-# for job_id in sch_registry.get_job_ids():
-#     app.logger.error("sch del-> " + str(job_id))
-#     sch_registry.remove(job_id, delete_job=True)
+sch_registry = ScheduledJobRegistry(queue=q)
+for job_id in sch_registry.get_job_ids():
+    app.logger.error("sch del-> " + str(job_id))
+    sch_registry.remove(job_id, delete_job=True)
 
 def job_function():
     con = conDB.newCon()

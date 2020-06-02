@@ -35,7 +35,7 @@ def buildPDF(data, swName, nameCountry):
                 except Exception as e:
                     print("Error closing con {}".format(e))
 
-        html += "<h2>" + principleHname + "</h2>"
+        html += "<h2><font color=\"black\">" + principleHname + "</h2>"
         
         rules = principlesOUT[pID]["rules"]
         
@@ -67,15 +67,16 @@ def buildPDF(data, swName, nameCountry):
                 try: 
                     con = conDB.newCon()
                     res = conDB.getSuggestion(con, idDEF).fetchall()
-                    
                     if len(res) == 0:
                         html += "<h5><font color=\"black\"> No suggestions available </font></h5>"
                     else:
                         html += "<h5><font color=\"black\"> Suggestions to be in compliance </font></h5>"
                         html += "<ul>"
                         for k in res:
-                            """<li><font color=\"black\"> """ + k[1] + "</li>"
+                            html += """<li><font color=\"black\"> """ + k[1] + "</li>"
                         html += "</ul>"
+                        html += "<br>"
+                        html += "<p></p>"
 
                 except Exception as e:
                     raise

@@ -39,8 +39,9 @@ def getPrincipleHname(dbCon, phID):
 
 def getSuggestion(dbCon, defID):
     cursor = dbCon.cursor()
-    querysug = 'SELECT * FROM suggestions ' \
-                            'WHERE principleID = ?;'
+    querysug = 'select suggestions.id, suggestion, principleID from suggestions    \
+                inner join principle p on suggestions.principleID = p.id\
+                where p.id = ?;'
     data = cursor.execute(querysug, (defID,))
 
     return data
