@@ -66,17 +66,18 @@ def buildPDF(data, swName, nameCountry):
                 con = None
                 try: 
                     con = conDB.newCon()
-                    res = conDB.getSuggestion(con, idDEF).fetchall()
-                    if len(res) == 0:
-                        html += "<h5><font color=\"black\"> No suggestions available </font></h5>"
-                    else:
-                        html += "<h5><font color=\"black\"> Suggestions to be in compliance </font></h5>"
-                        html += "<ul>"
-                        for k in res:
-                            html += """<li><font color=\"black\"> """ + k[1] + "</li>"
-                        html += "</ul>"
-                        html += "<br>"
-                        html += "<p></p>"
+                    if(pID != 7): # exclude rule for country
+                        res = conDB.getSuggestion(con, idDEF).fetchall()
+                        if len(res) == 0:
+                            html += "<h5><font color=\"black\"> No suggestions available </font></h5>"
+                        else:
+                            html += "<h5><font color=\"black\"> Suggestions to be in compliance </font></h5>"
+                            html += "<ul>"
+                            for k in res:
+                                html += """<li><font color=\"black\"> """ + k[1] + "</li>"
+                            html += "</ul>"
+                            html += "<br>"
+                            html += "<p></p>"
 
                 except Exception as e:
                     raise

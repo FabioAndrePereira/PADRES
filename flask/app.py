@@ -377,7 +377,7 @@ def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, doZAP, zapURL):
             html += "</table>"
         else:
             html += """<h3><font color=\"black\"> No Cookies Retrived </font></h3>"""
-        app.logger.error(cookieN)
+        #app.logger.error(cookieN)
         if len(cookieN) != 0:
             html += """<h3><font color=\"black\"> Cookies added after consent </font></h3>"""
             html += """
@@ -416,7 +416,7 @@ def doAllScans(htmlGDPR, timestamp, idPDF, doNMAP, doZAP, zapURL):
         if ':' in nmapIP:
             nmapIP = nmapIP.split(':')[0]
         app.logger.info("NMAP")
-        app.logger.error(nmapIP)
+        #app.logger.error(nmapIP)
         nmapScan.nmapScan(nmapIP, 'pdfs/' + str(idPDF) + '.xml', 'pdfs/' + str(idPDF) + '.html')
         # nameXML = "pdfs/" + str(idPDF) + ".xml"
         nameHTML = "pdfs/" + str(idPDF) + ".html"

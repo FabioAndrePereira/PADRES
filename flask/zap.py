@@ -35,12 +35,12 @@ def doScan(target, id):
         print('Passive Scan completed')
         scanners = [40012, 40014, 40018, 40016, 40017, 90018, 40026, 6, 7, 10045, 40009, 
         90019, 90020, 0, 20019, 30001, 30002, 40003, 40008, 50000]
-        zap.ascan.set_option_default_policy('Default')
+        #zap.ascan.set_option_default_policy('St-High-Th-High')
         #zap.ascan.disable_all_scanners()
         zap.ascan.enable_all_scanners()
         for sc in scanners:
-            zap.ascan.set_scanner_alert_threshold(sc, 'Default')
-            zap.ascan.set_scanner_attack_strength(sc, 'Default')
+            zap.ascan.set_scanner_alert_threshold(sc, 'High')
+            zap.ascan.set_scanner_attack_strength(sc, 'High')
         zap.ascan.set_option_max_rule_duration_in_mins(5)
         zap.ascan.set_option_max_scan_duration_in_mins(120)
         #zap.ascan.enable_scanners(40018,40012)
