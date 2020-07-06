@@ -10,11 +10,11 @@ services:
       - 8090:8090
     command:  zap.sh -daemon -port 8090 -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true -config api.disablekey=true -host 0.0.0.0 -addoninstall domxss -addoninstall sqliplugin -quickprogress -addonupdate
   flaskgdpr:
-    build: ./flask # dir do projeto
+    build: ./src/flask # dir do projeto
     image: flaskgdpr
     container_name: flaskgdpr
     volumes:
-      - ./flask:/usr/src/app/
+      - /src/flask:/usr/src/app/
       - static-content:/usr/src/app/pdfs
      # - ./flask/pdfs:/usr/src/app/pdfs
     networks: 
@@ -24,9 +24,9 @@ services:
       - 5000:5000
     command: flask run --host=0.0.0.0
   gdprinterface:
-    build: ./gdprInterface
+    build: ./src/gdprInterface
     volumes:
-      - ./gdprInterface/src:/app/gdprinterface/src
+      - ./src/gdprInterface/src:/app/gdprinterface/src
     networks: 
       main:
         ipv4_address: 172.19.0.5  
