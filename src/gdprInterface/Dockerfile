@@ -1,4 +1,4 @@
-FROM node:13.6.0
+FROM node:14.5.0
 
 # add `/app/node_modules/.bin` to $PATH
 ENV PATH /app/gdprinterface/node_modules/:$PATH
