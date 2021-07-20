@@ -168,7 +168,7 @@ def principleH():
     dbCon = None
     try:
         dbCon = conDB.newCon()
-        data = conDB.getPrincipleHeader(dbCon)
+        data = conDB.getPrincipleHeaders(dbCon)
         response = app.response_class(
             response=jsonParser.phJSON(data.fetchall()),
             status=200,
